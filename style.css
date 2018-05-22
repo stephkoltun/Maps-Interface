@@ -1,0 +1,111 @@
+body {
+  margin: 60px;
+  padding: 0;
+}
+
+/* MODE PICKER */
+#modePicker {
+  margin: 0 0 60px 0;
+}
+
+#modePicker button {
+  border: 3px solid #000;
+  background-color: #000;
+  color: #fff;
+  border-radius: 0px;
+  padding: 20px;
+  margin: 0px 20px;
+
+  font-family: 'Work Sans', sans-serif;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 24px;
+}
+
+#modePicker button:hover {
+  background-color: #fff;
+  color: #000;
+}
+
+
+/* Popup */
+.popup {
+  width: 500px;
+  padding: 50px;
+
+  background: #fff;
+  border-style: solid;
+  border-color: #000;
+  border-width: 3px;
+  box-shadow: none;
+
+  z-index: 20px;
+  position: absolute;
+  transform: translate(-50%,-50%);
+}
+
+.latest {
+  box-shadow: 12px 12px #000;
+}
+
+
+.popup h1 {
+  font-family: 'Work Sans', sans-serif;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 56px;
+  margin: 0 0 20px 0;
+}
+
+.popup h2 {
+  font-family: 'Work Sans', sans-serif;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 24px;
+}
+
+.popup p {
+  font-family: 'Lora', serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+}
+.popup img {
+  object-fit: cover;
+  width: 100%;
+  height: 250px;
+}
+
+/* IMAGE GRID */
+
+.grid {
+  /* background: #DDD; */
+}
+/* clear fix */
+.grid:after {
+  content: '';
+  display: block;
+  clear: both;
+}
+
+.grid-sizer, .grid-item {
+  width: 25%;
+  height: 25%;
+  min-height: 300px;
+}
+
+.grid-item {
+  float: left;
+}
+
+.grid-item img {
+  object-fit: cover;
+  display: block;
+  height: 86%;
+  width: 86%;
+  margin: 7%;
+  border-top: 3px solid #000;
+  border-left: 3px solid #000;
+  border-bottom: 12px solid #000;
+  border-right: 12px solid #000;
+}

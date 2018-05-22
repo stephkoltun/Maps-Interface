@@ -1,0 +1,109 @@
+{
+  "maps": [
+    {
+      "id": 1,
+      "title": "Slow Shore Shuffle",
+      "img": "001.png",
+      "description": "Roam the shoreline of Staten Island &mdash; reload to start again elsewhere.",
+      "category": "Website"
+    },
+    {
+      "id": 2,
+      "title": "The Thick Boundary of New York City",
+      "img": "002.png",
+      "description": "Outlines of the city as identified by different agencies, histories, and data collection methods are compiled. Together, they illustrate the thickness of the city&rsquo;s perimeter and its many imaginings.",
+      "category": "Website"
+    },
+    {
+      "id": 3,
+      "title": "Identifying Darkness",
+      "img": "003.png",
+      "description": "Press and hold to toggle modes. Swipe or press the spacebar to change scale.",
+      "category": "Image Study"
+    },
+    {
+      "id": 4,
+      "title": "Points and Polygons",
+      "img": "004.png",
+      "description": "Click to isolate a system. Swipe or press spacebar to change modes.",
+      "category": "Website"
+    },
+    {
+      "id": 5,
+      "title": "Tileswap",
+      "img": "005.png",
+      "description": "Pan around, exploring the reconfigured aerial imagery of New York City.",
+      "category": "Website"
+    },
+    {
+      "id": 6,
+      "title": "From City Island",
+      "img": "006.png",
+      "description": "What public transit lines are directly available from any point in the city? Click to select a new point. Drag to reveal the aerial imagery.",
+      "category": "Website"
+    },
+    {
+      "id": 7,
+      "title": "Finding Green",
+      "img": "007.png",
+      "description": "An aerial image of Randall&rsquo;s Island is divided into subdivisions and the pixels within each are sorted by their hue value. Move the cursor to reveal and hide the originating image.",
+      "category": "Image Study"
+    },
+    {
+      "id": 8,
+      "title": "Subway Grid",
+      "img": "008.png",
+      "description": "",
+      "category": "Website"
+    },
+    {
+      "id": 9,
+      "title": "New York I Love You",
+      "img": "009.png",
+      "description": "Hover over a track to hear different field recordings of the LCD Soundsystem song, &ldquo;New York I Love You, But You&rsquo;re Bringing Me Down&rdquo;.",
+      "category": "Audio"
+    },
+    {
+      "id": 10,
+      "title": "Measuring Light",
+      "img": "010.png",
+      "description": "Click the buttons to change between sampling point representations.",
+      "category": "Fieldwork"
+    },
+    {
+      "id": 11,
+      "title": "Dominant Forms: Area",
+      "img": "011.png",
+      "description": "Buildings are grouped by footprint size. Hover to isolate each group.",
+      "category": "Website"
+    },
+    {
+      "id": 12,
+      "title": "Looking Up",
+      "img": "012.png",
+      "description": "Hover to reveal the GPS accuracy at each point where a photo was taken.",
+      "category": "Fieldwork"
+    },
+    {
+      "id": 13,
+      "title": "A Walk Three Ways",
+      "img": "013.png",
+      "description": "Scrub along the altitude graph, pan within the aerial, or scrub along the path to update all views.",
+      "category": "Website"
+    },
+    {
+      "id": 14,
+      "title": "Subway Stream",
+      "img": "014.png",
+      "description": "Watch advertisements from subway stations whiz by like passing trains.",
+      "category": "Fieldwork"
+    },
+    {
+      "id": 15,
+      "title": "Looking Down",
+      "img": "015.png",
+      "description": "Hover to reveal an image of the sky corresponding to point on the ground.",
+      "category": "Fieldwork"
+    }
+  ]
+}
