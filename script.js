@@ -1,5 +1,10 @@
-var mode = "popup";
 var mapData;
+
+var currentSettings = {
+  mode: "split",
+  isDragging: false,
+  splits: 1
+}
 
 // get JSON data about maps
 fetch('data.json')
@@ -79,43 +84,133 @@ function showPopup(properties) {
   $('.latest').css('top',offsetTop + 'px').css('left', offsetLeft+'px');
 }
 
-// $('body').on('click', '.popup', function() {
-//   $(this).remove();
-//   if ($('.popup').length == 0) {
-//     $('.grid').css('opacity',"1");
-//   }
-// })
+
+function splitScreen(properties) {
+  let panes = currentSettings.splits;
+  if (currentSettings.splits == 2) {
+    currentSettings.splitChoice = Math.round(Math.random());
+  }
+  let index = parseInt(properties.number) - 1;
+  let map = mapData[index];
+
+  let options = [
+    {
+      2: {
+        'gridwrapper': {"width": "60%", "height": "inherit", "display": "inline-block", "float": "left"},
+        'gridsizer': {'width': '31%', 'height': "250px"},
+        'secondwrapper': {"width": "40%", "height": "100vh", "float": "left"}
+      },
+      3: {
+          'gridwrapper': {"width": "50%"},
+          'secondwrapper': {"width": "50%", "height": "40vh"},
+          'thirdwrapper': {"width": "50%", "height": "60vh", "float": "left"},
+      },
+    },
+    {
+      2: {
+        'gridwrapper': {"height": "50vh", "width": "100%", "z-index": "1"},
+        'gridsizer': {'width': '20%', 'height': "250px"},
+        'secondwrapper': {"width": "100%", "height": "50vh", "z-index": "100"}
+      },
+      3: {
+        'gridwrapper': {"height": "50vh", "width": "100%"},
+        'secondwrapper': {"width": "50%", "height": "50vh", "float": "left"},
+        'thirdwrapper': {"width": "50%", "height": "50vh", "float": "left", "z-index": "100"}
+      }
+    }
+  ];
+
+  let choice = options[currentSettings.splitChoice];
+
+  switch (panes) {
+    case 2:
+      $('.grid-wrapper').css(choice[2].gridwrapper);
+      $('.grid').isotope('layout');
+      $('.grid-sizer, .grid-item').css(choice[2].gridsizer);
+      $('.grid').isotope('layout');
+
+      $('.grid-item img').css({'border-bottom': '3px solid #000', 'border-right': '3px solid #000'});
+
+
+      let second = createPane('second', map);
+      $('body').append(second);
+      $('.second-wrapper').css(choice[2].secondwrapper);
+
+      $('.grid').isotope('layout');
+      break;
+    case 3:
+      $('.grid-wrapper').css(choice[3].gridwrapper);
+      $('.grid').isotope('layout');
+
+      let third = createPane('third', map);
+      $('body').append(third);
+      $('.second-wrapper').css(choice[3].secondwrapper);
+      $('.third-wrapper').css(choice[3].thirdwrapper);
+      break;
+  }
+}
+
+function createPane(classname, map) {
+
+  let title = '<h2>' + map.title + '</h2>';
+  let number = '<h1>' + map.id + '</h1>';
+
+  let description = '<p>' + map.description + '</p>';
+  let image = '<img src="img/' + map.img + '"/>';
+
+  let element = '<div class="pane ' + classname + '-wrapper"><div class="' +  classname + '">' + number + title + image + description + '</div></div>';
+
+  return element
+}
 
 $('.grid').on('click', '.grid-item', function() {
-  if ($('.popup').length == 0) {
-    $('.grid').css('opacity',"0.2");
+  switch (currentSettings.mode) {
+    case "popup":
+      if ($('.popup').length == 0) {
+        $('.grid').css('opacity',"0.2");
+      }
+      showPopup($(this)[0].dataset);
+      break;
+    case "split":
+      currentSettings.splits++;
+      splitScreen($(this)[0].dataset);
+      break;
+    default:
+      console.log("default");
+      break;
   }
-  showPopup($(this)[0].dataset);
+
 });
 
-
-$('body').on('mousedown', '.popup', function(e) {
-  console.log("mousedown");
-
-  $(this).attr("id","dragging");
-  dragElement(e);
-
+$('body').on('click', '.popup', function() {
+  if (!currentSettings.isDragging) {
+    $(this).remove();
+    if ($('.popup').length == 0) {
+      $('.grid').css('opacity',"1");
+    }
+  }
 })
 
 
-function dragElement(e) {
+$('body').on('mousedown', '.popup', function(e) {
+  let elem = $(this);
+  dragElement(e, elem);
+})
+
+function dragElement(e, element) {
   var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-  //$("body").on("mousedown", "#dragging", function(e) {
-    e = e || window.event;
-    // get the mouse cursor position at startup:
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    document.onmouseup = closeDragElement;
-    // call a function whenever the cursor moves:
-    document.onmousemove = elementDrag;
-  //})
+  e = e || window.event;
+  // get the mouse cursor position at startup:
+  pos3 = e.clientX;
+  pos4 = e.clientY;
+  document.onmouseup = closeDragElement;
+  // call a function whenever the cursor moves:
+  document.onmousemove = elementDrag;
 
   function elementDrag(e) {
+    currentSettings.isDragging = true;
+    element.attr("id","dragging");
+
     e = e || window.event;
     // calculate the new cursor position:
     pos1 = pos3 - e.clientX;
@@ -130,18 +225,13 @@ function dragElement(e) {
 
   function closeDragElement() {
     $('#dragging').attr("id", null);
+
     /* stop moving when mouse button is released:*/
     document.onmouseup = null;
     document.onmousemove = null;
+
+    setTimeout(function() {
+      currentSettings.isDragging = false;
+    },100);
   }
 }
-
-// $('body').on('dragenter', '.popup', function(e) {
-//   e.preventDefault()
-//   console.log("dragenter");
-// })
-//
-// $('body').on('drop', '.popup', function(e) {
-//   e.preventDefault()
-//   console.log("drop");
-// })
