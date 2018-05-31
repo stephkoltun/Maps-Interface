@@ -3,12 +3,34 @@ body {
   padding: 0;
 }
 
-/* MODE PICKER */
-#modePicker {
-  margin: 0 0 60px 0;
+#heading {
+  margin: 260px 0 60px 0;
 }
 
-#modePicker button {
+#heading h1 {
+  font-family: 'Work Sans', sans-serif;
+  font-weight: 400;
+  font-size: 36px;
+  text-align: center;
+}
+
+#heading h2 {
+  font-family: 'Cousine', monospace;
+  font-weight: 400;
+  font-size: 16px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* MODE PICKER */
+#modePicker {
+  margin: 60px;
+  display: flex;
+  justify-content: center;
+  /* align-items: center; */
+}
+
+#modePicker a {
   border: 3px solid #000;
   background-color: #000;
   color: #fff;
@@ -22,11 +44,10 @@ body {
   font-size: 24px;
 }
 
-#modePicker button:hover {
+#modePicker a:hover {
   background-color: #fff;
   color: #000;
 }
-
 
 
 ::-webkit-scrollbar {
@@ -62,22 +83,23 @@ body {
   border-width: 3px;
   box-shadow: none;
 
-  z-index: 20px;
+  z-index: 20;
   position: absolute;
   transform: translate(-50%,-50%);
 }
 
-.latest {
+.active {
   box-shadow: 12px 12px #000;
 }
 
 
-.popup h1, .pane h1,  {
+.popup > h1, .pane h1,  {
   font-family: 'Work Sans', sans-serif;
   text-transform: uppercase;
   font-weight: 700;
   font-size: 56px;
   margin: 0 0 20px 0;
+  text-align: left;
 }
 
 .popup h2, .pane h2, .post h1, #groups h2 {
@@ -85,6 +107,7 @@ body {
   text-transform: uppercase;
   font-weight: 700;
   font-size: 24px;
+  text-align: left;
 }
 
 .popup p, .pane p {
