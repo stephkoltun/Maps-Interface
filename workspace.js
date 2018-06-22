@@ -40,7 +40,7 @@ function populateHTML(data) {
       "class": 'list-item',
       css: {
         "background-image": 'url("' + img + '")',
-        "background-color": color
+        // "background-color": color
       },
       "data-title": data[i].title,
       "data-number": data[i].id,
@@ -68,6 +68,7 @@ $('body').on('mousedown', '.list-item', function(e) {
   var clicked = $(this);
 
   var copy = clicked.clone().appendTo('#workspace');
+  copy.empty()
   copy.removeClass('list-item');
   copy.addClass("active");
   copy.css("top", clicked.offset().top + offset);
@@ -77,45 +78,56 @@ $('body').on('mousedown', '.list-item', function(e) {
   dragElement(e, copy);
 })
 
-$('body').on('click', '.workspace-item', function() {
-  if (!isDragging) {
+$('body').on('mousedown', '.workspace-item', function(e) {
 
-    if ($("#workspace-panel").length >0) {
-      $("#workspace-panel").remove();
-    }
+  let elem = $(this);
+  elem.css("z-index", $('.workspace-item').length * 20);
+  elem.attr("id", "dragging");
+  elem.addClass("active");
+  console.log("drag");
 
-    var mapIndex = $(this)[0].dataset.number - 1;
-    var map = mapData[mapIndex]
-
-    var title = "<h1>" + map.title + "</h1>";
-    var meta = "<div class='metadata'><p class='cat'>" + map.category + "</p><p class='desc'>" + map.description + "</p></div>";
-    var post = "<div class='post'>" + map.post + "</div>";
-
-    var images = "<div class='images'><div id='image-inset'>";
-    for (var i = 0; i < map.images.length; i++) {
-      images += "<div class='image-item'><img src='img/" + map.images[i] + "'/></div>";
-    }
-    images += "</div></div>";
-
-    $('<div/>', {
-      "id": 'workspace-panel',
-    }).append(title + meta + post + images).appendTo('.workspace-wrapper');
-
-    $('#image-inset').imagesLoaded( function() {
-      console.log("images loaded");
-      $('#image-inset').isotope({
-        // options...
-        itemSelector: '.image-item',
-        percentPosition: true,
-        cellsByRow: {
-          columnWidth:'.image-sizer',
-          rowHeight: '.image-sizer'
-        }
-      });
-
-    });
-  }
+  dragElement(e, elem);
 })
+
+// $('body').on('click', '.workspace-item', function() {
+//   if (!isDragging) {
+//
+//     if ($("#workspace-panel").length >0) {
+//       $("#workspace-panel").remove();
+//     }
+//
+//     var mapIndex = $(this)[0].dataset.number - 1;
+//     var map = mapData[mapIndex]
+//
+//     var title = "<h1>" + map.title + "</h1>";
+//     var meta = "<div class='metadata'><p class='cat'>" + map.category + "</p><p class='desc'>" + map.description + "</p></div>";
+//     var post = "<div class='post'>" + map.post + "</div>";
+//
+//     var images = "<div class='images'><div id='image-inset'>";
+//     for (var i = 0; i < map.images.length; i++) {
+//       images += "<div class='image-item'><img src='img/" + map.images[i] + "'/></div>";
+//     }
+//     images += "</div></div>";
+//
+//     $('<div/>', {
+//       "id": 'workspace-panel',
+//     }).append(title + meta + post + images).appendTo('.workspace-wrapper');
+//
+//     $('#image-inset').imagesLoaded( function() {
+//       console.log("images loaded");
+//       $('#image-inset').isotope({
+//         // options...
+//         itemSelector: '.image-item',
+//         percentPosition: true,
+//         cellsByRow: {
+//           columnWidth:'.image-sizer',
+//           rowHeight: '.image-sizer'
+//         }
+//       });
+//
+//     });
+//   }
+// })
 
 var isDragging = false;
 
@@ -152,9 +164,35 @@ function dragElement(e, element) {
     document.onmouseup = null;
     document.onmousemove = null;
 
-    $('#dragging').toggleClass('active workspace-item');
+    $('#dragging').toggleClass('active');
+    if (!$('#dragging').hasClass('workspace-item')) {
+      $('#dragging').addClass('workspace-item');
+    }
     $('#dragging').css("background-color", "#acacac");
     $('#dragging').attr("id", null);
+
+    // check if element is overtop of another one
+    let elementsBelow = document.elementsFromPoint(e.clientX, e.clientY)
+    let otherItems = elementsBelow.filter(function(item) {
+      return (item.className == "workspace-item"? true : false);
+    });
+
+    if (otherItems.length > 0) {
+      element.css("border-color", "#aa22dd");
+
+      console.log(otherItems[0].offsetTop);
+      let offset = 10;
+      let yDifference = otherItems[0].offsetHeight - element.outerHeight();
+      let yPosition = otherItems[0].offsetTop - yDifference/2 + offset;
+      let xDifference = otherItems[0].offsetWidth - element.outerWidth();
+      let xPosition = otherItems[0].offsetLeft - xDifference/2 + offset;
+      element.css({"top": yPosition + "px", "left": xPosition + "px"});
+
+      // need to put a group wrapper around these?
+      for (let item of otherItems) {
+        item.style["border-color"] = "#aa22dd";
+      }
+    }
 
 
     setTimeout(function() {
