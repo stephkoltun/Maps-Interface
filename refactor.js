@@ -45,7 +45,6 @@ class WorkspaceMap {
   checkBelow(x,y) {
     // check if element is overtop of another one
     let elementsBelow = document.elementsFromPoint(x, y)
-    console.log(elementsBelow);
     let mapsBelow = elementsBelow.filter(function(item) {
       return (item.className == "workspace-item"? true : false);
     });
@@ -129,6 +128,9 @@ class WorkspaceMap {
         }
       } else if (itemsBelow.match == "group") {
         console.log("add to existing group!");
+        var index = parseInt(itemsBelow.elems[0].id);
+
+        groups[index].addMap(this);
       }
 
       setTimeout(function() {
@@ -280,6 +282,7 @@ class Group {
 
     var newGroup = $('<div/>', {
         "class": 'workspace-group',
+        "id": (groups.length).toString(),
         css: {
           "width": "110px",
           "height": "110px",
@@ -296,6 +299,28 @@ class Group {
     return newGroup;
   }
 
+  addMap(map) {
+
+    map.element.css({
+      "border-color": this.color,
+      "position": "absolute",
+      "top": (this.maps.length*10 + "px"),
+      "left": (this.maps.length*10 + "px")
+    });
+
+    this.element.append(map.element);
+    this.element.css({
+      "width": ((100 + this.maps.length*10) + "px"),
+      "height": ((100 + this.maps.length*10) + "px"),
+    })
+
+    this.maps.push(map);
+  }
+
+  removeMap() {
+
+  }
+
   stackGroup() {
     // let offset = 10;
     // let yDifference = otherItems[0].offsetHeight - copiedElement.outerHeight();
@@ -309,13 +334,6 @@ class Group {
 
   }
 
-  addMap() {
-
-  }
-
-  removeMap() {
-
-  }
 
   drag() {
 
