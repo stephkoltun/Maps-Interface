@@ -86,48 +86,48 @@ $('body').on('mousedown', '.workspace-item', function(e) {
   elem.addClass("active");
   console.log("drag");
 
-  dragElement(e, elem);
+  //dragElement(e, elem);
 })
 
-// $('body').on('click', '.workspace-item', function() {
-//   if (!isDragging) {
-//
-//     if ($("#workspace-panel").length >0) {
-//       $("#workspace-panel").remove();
-//     }
-//
-//     var mapIndex = $(this)[0].dataset.number - 1;
-//     var map = mapData[mapIndex]
-//
-//     var title = "<h1>" + map.title + "</h1>";
-//     var meta = "<div class='metadata'><p class='cat'>" + map.category + "</p><p class='desc'>" + map.description + "</p></div>";
-//     var post = "<div class='post'>" + map.post + "</div>";
-//
-//     var images = "<div class='images'><div id='image-inset'>";
-//     for (var i = 0; i < map.images.length; i++) {
-//       images += "<div class='image-item'><img src='img/" + map.images[i] + "'/></div>";
-//     }
-//     images += "</div></div>";
-//
-//     $('<div/>', {
-//       "id": 'workspace-panel',
-//     }).append(title + meta + post + images).appendTo('.workspace-wrapper');
-//
-//     $('#image-inset').imagesLoaded( function() {
-//       console.log("images loaded");
-//       $('#image-inset').isotope({
-//         // options...
-//         itemSelector: '.image-item',
-//         percentPosition: true,
-//         cellsByRow: {
-//           columnWidth:'.image-sizer',
-//           rowHeight: '.image-sizer'
-//         }
-//       });
-//
-//     });
-//   }
-// })
+$('body').on('click', '.workspace-item', function() {
+  if (!isDragging) {
+
+    if ($("#workspace-panel").length >0) {
+      $("#workspace-panel").remove();
+    }
+
+    var mapIndex = $(this)[0].dataset.number - 1;
+    var map = mapData[mapIndex]
+
+    var title = "<h1>" + map.title + "</h1>";
+    var meta = "<div class='metadata'><p class='cat'>" + map.category + "</p><p class='desc'>" + map.description + "</p></div>";
+    var post = "<div class='post'>" + map.post + "</div>";
+
+    var images = "<div class='images'><div id='image-inset'>";
+    for (var i = 0; i < map.images.length; i++) {
+      images += "<div class='image-item'><img src='img/" + map.images[i] + "'/></div>";
+    }
+    images += "</div></div>";
+
+    $('<div/>', {
+      "id": 'workspace-panel',
+    }).append(title + meta + post + images).appendTo('.workspace-wrapper');
+
+    $('#image-inset').imagesLoaded( function() {
+      console.log("images loaded");
+      $('#image-inset').isotope({
+        // options...
+        itemSelector: '.image-item',
+        percentPosition: true,
+        cellsByRow: {
+          columnWidth:'.image-sizer',
+          rowHeight: '.image-sizer'
+        }
+      });
+
+    });
+  }
+})
 
 var isDragging = false;
 
