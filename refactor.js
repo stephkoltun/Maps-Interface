@@ -31,6 +31,7 @@ class WorkspaceMap {
 
     // make sure it's clickable
     this.element.on('mousedown', this.dragElement.bind(this)); // bind the whole object, rather than just the DOM element
+    this.element.on('click', this.showInfo.bind(this));
   }
 
   createDOM(copy) {
@@ -39,6 +40,7 @@ class WorkspaceMap {
     copy.addClass("workspace-item");
     copy.css("left", (window.event.clientX-50) + "px");
     copy.css("top", (window.event.clientY-50) + "px");
+    copy.css("background-image", 'url("img/' + this.metadata.thumb + '")')
     return copy
   }
 
@@ -71,7 +73,6 @@ class WorkspaceMap {
   dragElement() {
     this.element.attr("id","dragging");
     this.element.addClass("active");
-    this.dragging = true;
     var currentX = 0, currentY = 0, previousX = 0, previousY = 0;
     var e = window.event;
     // get the mouse cursor position at startup:
@@ -82,6 +83,7 @@ class WorkspaceMap {
     document.onmouseup = stopDraggingElement.bind(this); // stop the dragging
 
     function elementDrag(e) {
+      this.dragging = true;
       e = e || window.event;
       // calculate the new cursor position:
       currentX = previousX - e.clientX;
@@ -124,19 +126,56 @@ class WorkspaceMap {
         if (matchingMap != undefined) {
           console.log("create a new group");
           let group = new Group(bgColors[groups.length], this, matchingMap[0]);
+          this.grouped = true;
+          matchingMap[0].grouped = true;
           groups.push(group);
         }
-      } else if (itemsBelow.match == "group") {
+      } else if (itemsBelow.match == "group" && !this.grouped) {
         console.log("add to existing group!");
-        var index = parseInt(itemsBelow.elems[0].id);
 
+        var index = parseInt(itemsBelow.elems[0].id);
         groups[index].addMap(this);
+        this.grouped = true;
       }
 
       setTimeout(function() {
         this.dragging = false;
       },100);
     }
+  }
+
+  showInfo() {
+    if ($("#workspace-panel").length >0) {
+      $("#workspace-panel").remove();
+    }
+
+    var title = "<h1>" + this.metadata.title + "</h1>";
+    var meta = "<div class='metadata'><p class='cat'>" + this.metadata.category + "</p><p class='desc'>" + this.metadata.description + "</p></div>";
+    var post = "<div class='post'>" + this.metadata.post + "</div>";
+
+    var images = "<div class='images'><div id='image-inset'>";
+    for (var i = 0; i < this.metadata.images.length; i++) {
+      images += "<div class='image-item'><img src='img/" + this.metadata.images[i] + "'/></div>";
+    }
+    images += "</div></div>";
+
+    $('<div/>', {
+      "id": 'workspace-panel',
+    }).append(title + meta + post + images).appendTo('.workspace-wrapper');
+
+    $('#image-inset').imagesLoaded( function() {
+      console.log("images loaded");
+      $('#image-inset').isotope({
+        // options...
+        itemSelector: '.image-item',
+        percentPosition: true,
+        cellsByRow: {
+          columnWidth:'.image-sizer',
+          rowHeight: '.image-sizer'
+        }
+      });
+
+    });
   }
 }
 
@@ -164,16 +203,19 @@ class ListMap {
   }
 
   createDom() {
+    let img = $("<img/>", {
+      "src": "img/" + this.metadata.thumb,
+      "draggable": "false",
+    })
+
+    let title = $("<h1/>").text(this.metadata.title);
+
     return $('<div/>', {
         "class": 'list-item',
-        css: {
-          "background-image": 'url("img/' + this.metadata.thumb + '")',
-          // "background-color": color
-        },
         "data-title": this.metadata.title,
         "data-index": this.metadata.index,
         "data-category": this.metadata.category,
-    }).append("<h1>" + this.metadata.title + "</h1>");
+    }).append(img).append(title);
   }
 
   mouseDown() {
@@ -259,8 +301,12 @@ class Group {
   constructor(color, firstMap, secondMap) {
     this.color = color;
     this.maps = [firstMap, secondMap];
+    this.expanded = false;
 
     this.element = this.createGroupDOM(firstMap, secondMap);
+
+    this.element.on('dblclick', this.expandAll.bind(this));
+    this.element.hover(this.showBackground.bind(this), this.removeBackground.bind(this));
   }
 
   createGroupDOM(a, b) {
@@ -270,26 +316,26 @@ class Group {
     a.element.css({
       "border-color": this.color,
       "position": "absolute",
-      "top": "0px",
-      "left": "0px",
+      "top": "10px",
+      "left": "10px",
     });
     b.element.css({
       "border-color": this.color,
       "position": "absolute",
-      "top": "10px",
-      "left": "10px",
+      "top": "20px",
+      "left": "20px",
     });
 
     var newGroup = $('<div/>', {
         "class": 'workspace-group',
         "id": (groups.length).toString(),
         css: {
-          "width": "110px",
-          "height": "110px",
+          "width": "134px",
+          "height": "134px",
           "position": "absolute",
           "top": offsetY,
           "left": offsetX,
-          //"background-color": this.color
+
         },
     }).append(a.element);
     newGroup.append(b.element);
@@ -310,8 +356,8 @@ class Group {
 
     this.element.append(map.element);
     this.element.css({
-      "width": ((100 + this.maps.length*10) + "px"),
-      "height": ((100 + this.maps.length*10) + "px"),
+      "width": ((120 + this.maps.length*10) + "px"),
+      "height": ((120 + this.maps.length*10) + "px"),
     })
 
     this.maps.push(map);
@@ -340,7 +386,35 @@ class Group {
   }
 
   expandAll() {
+    this.expanded = true;
 
+    for (var i = 0; i < this.maps.length; i++) {
+      var mapElement = this.maps[i].element;
+      mapElement.css({
+        "top": "10px",
+        "left": 10*(i+1) + 104*i + "px"
+      })
+    }
+
+    this.element.css({
+      "width": ((this.maps.length*104 + (this.maps.length+1)*10) + "px"),
+      "height": ("124px"),
+      "background-color": this.color
+    })
+  }
+
+  showBackground() {
+    this.element.css({
+      "background-color": this.color
+    })
+  }
+
+  removeBackground() {
+    if (!this.expanded) {
+      this.element.css({
+        "background-color": "#fff"
+      })
+    }
   }
 
 }
