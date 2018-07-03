@@ -9,7 +9,6 @@ body {
   display: flex;
 }
 
-
 .workspace-wrapper {
   padding: 30px;
   float: left;
@@ -128,9 +127,6 @@ body {
 
 
 #list {
-  /* height: 100%;
-  width: 30vw; */
-  /* background: #DDD; */
 }
 /* clear fix */
 #list:after {
