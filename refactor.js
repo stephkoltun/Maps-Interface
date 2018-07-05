@@ -7,6 +7,8 @@ var groups = [];
 var bgColors = ["#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6", "#A30059",
 "#0000A6", "#63FFAC", "#004D43", "#8FB0FF","#5A0007", "#809693", "#1B4400", "#4FC601"];
 
+var tileSize = 100;
+
 class WorkspaceMap {
   constructor(obj, copy) {
     this.metadata = {
@@ -23,6 +25,7 @@ class WorkspaceMap {
 
     this.dragging = false;
     this.grouped = false;
+    this.hoveredOver = null;
 
     // add it to the DOM
     this.element = this.createDOM(copy);
@@ -38,8 +41,8 @@ class WorkspaceMap {
     copy.empty()
     copy.removeClass('list-item');
     copy.addClass("workspace-item");
-    copy.css("left", (window.event.clientX-50) + "px");
-    copy.css("top", (window.event.clientY-50) + "px");
+    copy.css("left", (window.event.clientX-tileSize/2) + "px");
+    copy.css("top", (window.event.clientY-tileSize/2) + "px");
     copy.css("background-image", 'url("img/' + this.metadata.thumb + '")')
     return copy
   }
@@ -61,86 +64,109 @@ class WorkspaceMap {
         elems: groupsBelow
       }
       return below;
-    } else {
+    } else if (mapsBelow.length > 0) {
       var below = {
         match: "map",
         elems: mapsBelow
       }
       return below;
+    } else {
+      return "none"
     }
   }
 
   dragElement() {
-    this.element.attr("id","dragging");
-    this.element.addClass("active");
-    var currentX = 0, currentY = 0, previousX = 0, previousY = 0;
-    var e = window.event;
-    // get the mouse cursor position at startup:
-    previousX = e.clientX;
-    previousY = e.clientY;
 
-    document.onmousemove = elementDrag.bind(this); // call a function whenever the cursor moves:
-    document.onmouseup = stopDraggingElement.bind(this); // stop the dragging
-
-    function elementDrag(e) {
-      this.dragging = true;
-      e = e || window.event;
-      // calculate the new cursor position:
-      currentX = previousX - e.clientX;
-      currentY = previousY - e.clientY;
+    if (!this.grouped) {
+      this.element.attr("id","dragging");
+      this.element.addClass("active");
+      var currentX = 0, currentY = 0, previousX = 0, previousY = 0;
+      var e = window.event;
+      // get the mouse cursor position at startup:
       previousX = e.clientX;
       previousY = e.clientY;
-      // set the element's new position:
-      let elem = document.getElementById("dragging");
-      elem.style.top = (elem.offsetTop - currentY) + "px";
-      elem.style.left = (elem.offsetLeft - currentX) + "px";
-    }
 
-    function stopDraggingElement(e) {
-      e = e || window.event;
+      document.onmousemove = elementDrag.bind(this); // call a function whenever the cursor moves:
+      document.onmouseup = stopDraggingElement.bind(this); // stop the dragging
 
-      /* stop moving when mouse button is released:*/
-      document.onmouseup = null;
-      document.onmousemove = null;
+      function elementDrag(e) {
+        this.dragging = true;
+        e = e || window.event;
+        // calculate the new cursor position:
+        currentX = previousX - e.clientX;
+        currentY = previousY - e.clientY;
+        previousX = e.clientX;
+        previousY = e.clientY;
+        // set the element's new position:
+        let elem = document.getElementById("dragging");
+        elem.style.top = (elem.offsetTop - currentY) + "px";
+        elem.style.left = (elem.offsetLeft - currentX) + "px";
 
-      $('#dragging').removeClass('active');
-      $('#dragging').attr("id", null);
+        let itemsBelow = this.checkBelow(e.clientX, e.clientY);
 
-      let itemsBelow = this.checkBelow(e.clientX, e.clientY);
-
-
-      if (itemsBelow.match == "map") {
-
-        var matchingMap;
-
-        for (var i = 0; i < itemsBelow.elems.length; i++) {
-          let id = (itemsBelow.elems[i].dataset.index).toString();
-
-          if (id != this.metadata.index) {
-            matchingMap = mapsWorkspace.filter(function(item) {
-              return (item.metadata.index == id? true : false);
-            });
-          }
+        if (itemsBelow.match == "group") {
+          var index = parseInt(itemsBelow.elems[0].id);
+          groups[index].showBackground();
+          this.hoveredOver = groups[index];
+        } else if (this.hoveredOver!= null && itemsBelow == "none") {
+          this.hoveredOver.removeBackground();
+          this.hoveredOver = null;
         }
-
-        if (matchingMap != undefined) {
-          console.log("create a new group");
-          let group = new Group(bgColors[groups.length], this, matchingMap[0]);
-          this.grouped = true;
-          matchingMap[0].grouped = true;
-          groups.push(group);
-        }
-      } else if (itemsBelow.match == "group" && !this.grouped) {
-        console.log("add to existing group!");
-
-        var index = parseInt(itemsBelow.elems[0].id);
-        groups[index].addMap(this);
-        this.grouped = true;
       }
 
-      setTimeout(function() {
-        this.dragging = false;
-      },100);
+      function stopDraggingElement(e) {
+        e = e || window.event;
+
+        // stop moving when mouse button is released
+        document.onmouseup = null;
+        document.onmousemove = null;
+
+        // snap to grid
+        let elem = document.getElementById("dragging");
+        let topRound = roundToGrid(elem.offsetTop - currentY);
+        let leftRound = roundToGrid(elem.offsetLeft - currentX);
+        elem.style.top = (topRound - 2) + "px";
+        elem.style.left = (leftRound - 2) + "px";
+
+        $('#dragging').removeClass('active');
+        $('#dragging').attr("id", null);
+
+        let itemsBelow = this.checkBelow(e.clientX, e.clientY);
+
+
+        if (itemsBelow.match == "map") {
+
+          var matchingMap;
+
+          for (var i = 0; i < itemsBelow.elems.length; i++) {
+            let id = (itemsBelow.elems[i].dataset.index).toString();
+
+            if (id != this.metadata.index) {
+              matchingMap = mapsWorkspace.filter(function(item) {
+                return (item.metadata.index == id? true : false);
+              });
+            }
+          }
+
+          if (matchingMap != undefined) {
+            console.log("create a new group");
+            let group = new Group(bgColors[groups.length], this, matchingMap[0]);
+            this.grouped = true;
+            matchingMap[0].grouped = true;
+            groups.push(group);
+          }
+        } else if (itemsBelow.match == "group" && !this.grouped) {
+          console.log("add to existing group!");
+
+          var index = parseInt(itemsBelow.elems[0].id);
+          groups[index].addMap(this);
+          this.grouped = true;
+        }
+
+        setTimeout(function() {
+          this.dragging = false;
+        },100);
+      }
     }
   }
 
@@ -226,75 +252,6 @@ class ListMap {
   }
 }
 
-// function dragElement(e, element) {
-//   var currentX = 0, currentY = 0, previousX = 0, previousY = 0;
-//   e = e || window.event;
-//   // get the mouse cursor position at startup:
-//   previousX = e.clientX;
-//   previousY = e.clientY;
-//   // call a function whenever the cursor moves:
-//   document.onmousemove = elementDrag;
-//   // stop the dragging
-//   document.onmouseup = stopDraggingElement;
-//
-//
-//   function elementDrag(e) {
-//     isDragging = true;
-//
-//     e = e || window.event;
-//     // calculate the new cursor position:
-//     currentX = previousX - e.clientX;
-//     currentY = previousY - e.clientY;
-//     previousX = e.clientX;
-//     previousY = e.clientY;
-//     // set the element's new position:
-//     let elem = document.getElementById("dragging");
-//     element.css({"top": (elem.offsetTop - currentY) + "px", "left": (elem.offsetLeft - currentX) + "px"});
-//   }
-//
-//   function stopDraggingElement(e) {
-//     e = e || window.event;
-//
-//     /* stop moving when mouse button is released:*/
-//     document.onmouseup = null;
-//     document.onmousemove = null;
-//
-//     $('#dragging').toggleClass('active');
-//     if (!$('#dragging').hasClass('workspace-item')) {
-//       $('#dragging').addClass('workspace-item');
-//     }
-//     $('#dragging').css("background-color", "#acacac");
-//     $('#dragging').attr("id", null);
-//
-//     // check if element is overtop of another one
-//     let elementsBelow = document.elementsFromPoint(e.clientX, e.clientY)
-//     let otherItems = elementsBelow.filter(function(item) {
-//       return (item.className == "workspace-item"? true : false);
-//     });
-//
-//     if (otherItems.length > 0) {
-//       element.css("border-color", "#aa22dd");
-//
-//       console.log(otherItems[0].offsetTop);
-//       let offset = 10;
-//       let yDifference = otherItems[0].offsetHeight - element.outerHeight();
-//       let yPosition = otherItems[0].offsetTop - yDifference/2 + offset;
-//       let xDifference = otherItems[0].offsetWidth - element.outerWidth();
-//       let xPosition = otherItems[0].offsetLeft - xDifference/2 + offset;
-//       element.css({"top": yPosition + "px", "left": xPosition + "px"});
-//
-//       // need to put a group wrapper around these?
-//       for (let item of otherItems) {
-//         item.style["border-color"] = "#aa22dd";
-//       }
-//     }
-//
-//
-//     setTimeout(function() {
-//       isDragging = false;
-//     },100);
-//   }
-// }
 
 class Group {
 
@@ -302,10 +259,12 @@ class Group {
     this.color = color;
     this.maps = [firstMap, secondMap];
     this.expanded = false;
+    this.dragging = true;
 
     this.element = this.createGroupDOM(firstMap, secondMap);
 
-    this.element.on('dblclick', this.expandAll.bind(this));
+    this.element.on('dblclick', this.toggleView.bind(this));
+    this.element.on('mousedown', this.dragGroup.bind(this));
     this.element.hover(this.showBackground.bind(this), this.removeBackground.bind(this));
   }
 
@@ -333,9 +292,8 @@ class Group {
           "width": "134px",
           "height": "134px",
           "position": "absolute",
-          "top": offsetY,
-          "left": offsetX,
-
+          "top": offsetY-10,
+          "left": offsetX-10,
         },
     }).append(a.element);
     newGroup.append(b.element);
@@ -346,12 +304,11 @@ class Group {
   }
 
   addMap(map) {
-
     map.element.css({
       "border-color": this.color,
       "position": "absolute",
-      "top": (this.maps.length*10 + "px"),
-      "left": (this.maps.length*10 + "px")
+      "top": (this.maps.length*10+10 + "px"),
+      "left": (this.maps.length*10+10 + "px")
     });
 
     this.element.append(map.element);
@@ -381,8 +338,83 @@ class Group {
   }
 
 
-  drag() {
+  dragGroup() {
+    if (!this.expanded) {
+      this.element.attr("id","dragging");
 
+      var currentX = 0, currentY = 0, previousX = 0, previousY = 0;
+      var e = window.event;
+      // get the mouse cursor position at startup:
+      previousX = e.clientX;
+      previousY = e.clientY;
+
+      document.onmousemove = elementDrag.bind(this); // call a function whenever the cursor moves:
+      document.onmouseup = stopDraggingElement.bind(this); // stop the dragging
+
+      function elementDrag(e) {
+        this.dragging = true;
+        e = e || window.event;
+        // calculate the new cursor position:
+        currentX = previousX - e.clientX;
+        currentY = previousY - e.clientY;
+        previousX = e.clientX;
+        previousY = e.clientY;
+        // set the element's new position:
+        let elem = document.getElementById("dragging");
+        elem.style.top = (elem.offsetTop - currentY) + "px";
+        elem.style.left = (elem.offsetLeft - currentX) + "px";
+      }
+
+      function stopDraggingElement(e) {
+        e = e || window.event;
+
+        // stop moving when mouse button is released
+        document.onmouseup = null;
+        document.onmousemove = null;
+
+        // snap to grid
+        let elem = document.getElementById("dragging");
+        let topRound = roundToGrid(elem.offsetTop - currentY);
+        let leftRound = roundToGrid(elem.offsetLeft - currentX);
+        elem.style.top = (topRound - 2) + "px";
+        elem.style.left = (leftRound - 2) + "px";
+
+        $('#dragging').attr("id", null);
+
+        setTimeout(function() {
+          this.dragging = false;
+        },100);
+      }
+    }
+  }
+
+  toggleView() {
+    if (this.expanded) {
+      this.stackAll();
+    } else {
+      this.expandAll();
+    }
+  }
+
+
+  stackAll() {
+    console.log("stack");
+    this.expanded = false;
+
+    for (var i = 0; i < this.maps.length; i++) {
+      var mapElement = this.maps[i].element;
+      mapElement.css({
+        "top": 10*i + 10 + "px",
+        "left": 10*i + 10 + "px",
+        "z-index": i,
+      })
+    }
+
+    this.element.css({
+      "width": (((this.maps.length+1)*10 + 104) + "px"),
+      "height": (((this.maps.length+1)*10 + 104) + "px"),
+      "background-color": this.color
+    })
   }
 
   expandAll() {
@@ -412,11 +444,14 @@ class Group {
   removeBackground() {
     if (!this.expanded) {
       this.element.css({
-        "background-color": "#fff"
+        "background-color": "transparent"
       })
     }
   }
+}
 
+function roundToGrid(num) {
+  return Math.ceil((num+1) / 25) * 25;
 }
 
 // get JSON data about maps
