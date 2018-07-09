@@ -1,0 +1,24 @@
+{
+  "name": "maps-interface",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stephkoltun/Maps-Interface.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/stephkoltun/Maps-Interface/issues"
+  },
+  "homepage": "https://github.com/stephkoltun/Maps-Interface#readme",
+  "dependencies": {
+    "express": "^4.16.3",
+    "mongojs": "^2.6.0"
+  }
+}
