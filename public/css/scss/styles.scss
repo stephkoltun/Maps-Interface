@@ -59,36 +59,11 @@ button#save:hover {
   color: #fff;
 }
 
-#workspace-navigation {
-  width: 200px;
-  padding: 10px;
-  position: absolute;
-  top: 120px;
-  right: 50px;
-  border: 2px solid #000;
 
-  h1 {
-    font-size: 16px;
-    font-family: 'Work Sans', sans-serif;
-    text-align: left;
-    margin:0;
-  }
 
-  ul {
-    font-family: 'Work Sans', sans-serif;
-    font-weight: 400;
-    list-style: none;
-    -webkit-padding-start: 0;
-    margin-bottom: 0;
-  }
-
-  li {
-    padding: 0;
-  }
+.clearfix {
+  clear: both;;
 }
-
-
-
 
 
 
@@ -109,44 +84,78 @@ button#save:hover {
 
   background-color: #fff;
   border: 2px solid #000;
+
+  #list-view-toggle {
+      h1 {
+        float:left;
+        width: 50%;
+        font-size: 16px;
+        font-family: 'Work Sans', sans-serif;
+        color: #000;
+      }
+
+      .unselected {
+        color: #adadad;
+      }
+  }
+
+  #list {
+
+  }
+  /* clear fix */
+  #list:after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+
+  .list-sizer, .list-item {
+    width: 100%;
+    margin: 20px 0;
+    /* height: 30px; */
+  /*
+    background-blend-mode: multiply;*/
+    background-size: cover;
+    position: relative;
+    border: 1px solid #000;
+  }
+
+  .list-item h1 {
+    font-family: 'Cousine', monospace;
+    font-size: 14px;
+    margin: 10px;
+    font-weight: 700;
+  }
+
+  .list-item img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  #workspaces {
+
+    display: none;
+
+    ul {
+      font-family: 'Work Sans', sans-serif;
+      font-weight: 400;
+      list-style: none;
+      -webkit-padding-start: 0;
+      margin-bottom: 0;
+    }
+
+    li {
+      padding: 0;
+    }
+  }
+
 }
 
 
-#list {
-  /* height: 100%;
-  width: 30vw; */
-  /* background: #DDD; */
-}
-/* clear fix */
-#list:after {
-  content: '';
-  display: block;
-  clear: both;
-}
 
-.list-sizer, .list-item {
-  width: 100%;
-  margin: 20px 0;
-  /* height: 30px; */
-/*
-  background-blend-mode: multiply;*/
-  background-size: cover;
-  position: relative;
-  border: 1px solid #000;
-}
 
-.list-item h1 {
-  font-family: 'Cousine', monospace;
-  font-size: 14px;
-  margin: 10px;
-  font-weight: 700;
-}
 
-.list-item img {
-  height: 100%;
-  width: 100%;
-  object-fit: cover;
-}
 
 
 /* ---- WORKSPACE ----- */

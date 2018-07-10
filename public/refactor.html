@@ -17,8 +17,28 @@
     <!-- GRID OF IMAGES -->
     <div id="container">
       <div class="list-wrapper">
+        <div id="list-view-toggle">
+          <h1 id="mapsToggle">Maps</h1>
+          <h1 class="unselected" id="workspaceToggle">Workspaces</h1>
+          <div class="clearfix"></div>
+        </div>
+
+
         <div id="list"></div>
+        <div id="workspaces">
+          <ul id="existing-workspaces">
+            <li>
+              Temp Workspace
+            </li>
+            <li>
+              Another Temp Workspace
+            </li>
+          </ul>
+        </div>
+
       </div>
+
+
       <div class="workspace-wrapper">
         <div id="workspace"></div>
       </div>
@@ -29,11 +49,7 @@
           <button id="save" onclick="saveWorkspace()" type="button">save workspace</button>
         </form>
       </div>
-      <div id="workspace-navigation">
-        <h1>Existing Workspaces</h1>
-        <ul id="existing-workspaces">
-        </ul>
-      </div>
+
 
     </div>
 

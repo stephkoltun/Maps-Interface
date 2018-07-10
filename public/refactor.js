@@ -16,6 +16,23 @@ $.ajax({
 });
 
 
+$("#workspaceToggle").click(function() {
+  $("#workspaces").show();
+  $("#list").hide();
+
+  $(this).removeClass("unselected");
+  $("#mapsToggle").addClass("unselected");
+});
+
+$("#mapsToggle").click(function() {
+
+  $("#workspaces").hide();
+  $("#list").show();
+
+  $(this).removeClass("unselected");
+  $("#workspaceToggle").addClass("unselected");
+});
+
 // get JSON data about maps
 // fetch('data.json')
 //   .then(function(response) {

@@ -470,6 +470,8 @@ class Workspace {
   }
 }
 
+
+
 function initializeWorkspace(data) {
   for (var i = 0; i < 11; i++) {
     var map = new ListMap(data[i]);
