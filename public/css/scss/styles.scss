@@ -7,6 +7,24 @@ body {
   background-image: linear-gradient(to right, #ededed 1px, transparent 1px), linear-gradient(to bottom, #ededed 1px, transparent 1px);
 }
 
+button#save {
+  border: 2px solid #000;
+  font-family: 'Work Sans', sans-serif;
+  font-weight: 700;
+  padding: 10px;
+  font-size: 16px;
+  color: #000;
+  background-color: #fff;
+  position: absolute;
+  right: 50px;
+  bottom: 50px;
+}
+
+button#save:hover {
+  background-color: #000;
+  color: #fff;
+}
+
 #container {
   width: 100%;
   display: flex;

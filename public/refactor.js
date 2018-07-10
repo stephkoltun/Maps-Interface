@@ -8,10 +8,7 @@ $.ajax({
         console.log("let's plot!");
         console.log(data);
 
-        for (var i = 0; i < 11; i++) {
-          var map = new ListMap(data[i]);
-          mapsList.push(map);
-        }
+        initializeWorkspace(data);
     },
     error: function() {
         alert("error");

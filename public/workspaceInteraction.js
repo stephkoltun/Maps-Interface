@@ -1,8 +1,6 @@
 var mapsList = [];
 
-var mapsWorkspace = [];
-
-var groups = [];
+var workspace = new Workspace;
 
 var bgColors = ["#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6", "#A30059",
 "#0000A6", "#63FFAC", "#004D43", "#8FB0FF","#5A0007", "#809693", "#1B4400", "#4FC601"];
@@ -22,6 +20,9 @@ class WorkspaceMap {
       video: obj.video,
       datasources: obj.datasources
     }
+
+    this.x = null;
+    this.y = null;
 
     this.dragging = false;
     this.grouped = false;
@@ -128,6 +129,9 @@ class WorkspaceMap {
         elem.style.top = (topRound - 2) + "px";
         elem.style.left = (leftRound - 2) + "px";
 
+        this.x = elem.style.top;
+        this.y = elem.style.top;
+
         $('#dragging').removeClass('active');
         $('#dragging').attr("id", null);
 
@@ -139,7 +143,7 @@ class WorkspaceMap {
           var matchingMap;
 
           for (var i = 0; i < itemsBelow.elems.length; i++) {
-            let id = (itemsBelow.elems[i].dataset.index);
+            let id = (itemsBelow.elems[i].dataset.index).toString();
 
             if (id != this.metadata.index) {
               matchingMap = mapsWorkspace.filter(function(item) {
@@ -153,13 +157,13 @@ class WorkspaceMap {
             let group = new Group(bgColors[groups.length], this, matchingMap[0]);
             this.grouped = true;
             matchingMap[0].grouped = true;
-            groups.push(group);
+            workspace.groups.push(group);
           }
         } else if (itemsBelow.match == "group" && !this.grouped) {
           console.log("add to existing group!");
 
           var index = parseInt(itemsBelow.elems[0].id);
-          groups[index].addMap(this);
+          workspace.groups[index].addMap(this);
           this.grouped = true;
         }
 
@@ -171,37 +175,37 @@ class WorkspaceMap {
   }
 
   showInfo() {
-    if ($("#workspace-panel").length >0) {
-      $("#workspace-panel").remove();
-    }
-
-    var title = "<h1>" + this.metadata.title + "</h1>";
-    var meta = "<div class='metadata'><p class='cat'>" + this.metadata.category + "</p><p class='desc'>" + this.metadata.description + "</p></div>";
-    var post = "<div class='post'>" + this.metadata.post + "</div>";
-
-    var images = "<div class='images'><div id='image-inset'>";
-    for (var i = 0; i < this.metadata.images.length; i++) {
-      images += "<div class='image-item'><img src='img/" + this.metadata.images[i] + "'/></div>";
-    }
-    images += "</div></div>";
-
-    $('<div/>', {
-      "id": 'workspace-panel',
-    }).append(title + meta + post + images).appendTo('.workspace-wrapper');
-
-    $('#image-inset').imagesLoaded( function() {
-      console.log("images loaded");
-      $('#image-inset').isotope({
-        // options...
-        itemSelector: '.image-item',
-        percentPosition: true,
-        cellsByRow: {
-          columnWidth:'.image-sizer',
-          rowHeight: '.image-sizer'
-        }
-      });
-
-    });
+    // if ($("#workspace-panel").length >0) {
+    //   $("#workspace-panel").remove();
+    // }
+    //
+    // var title = "<h1>" + this.metadata.title + "</h1>";
+    // var meta = "<div class='metadata'><p class='cat'>" + this.metadata.category + "</p><p class='desc'>" + this.metadata.description + "</p></div>";
+    // var post = "<div class='post'>" + this.metadata.post + "</div>";
+    //
+    // var images = "<div class='images'><div id='image-inset'>";
+    // for (var i = 0; i < this.metadata.images.length; i++) {
+    //   images += "<div class='image-item'><img src='img/" + this.metadata.images[i] + "'/></div>";
+    // }
+    // images += "</div></div>";
+    //
+    // $('<div/>', {
+    //   "id": 'workspace-panel',
+    // }).append(title + meta + post + images).appendTo('.workspace-wrapper');
+    //
+    // $('#image-inset').imagesLoaded( function() {
+    //   console.log("images loaded");
+    //   $('#image-inset').isotope({
+    //     // options...
+    //     itemSelector: '.image-item',
+    //     percentPosition: true,
+    //     cellsByRow: {
+    //       columnWidth:'.image-sizer',
+    //       rowHeight: '.image-sizer'
+    //     }
+    //   });
+    //
+    // });
   }
 }
 
@@ -209,7 +213,7 @@ class ListMap {
 
   constructor(obj) {
     this.metadata = {
-      index: obj.id,
+      index: obj._id,
       title: obj.title,
       thumb: obj.img,
       description: obj.description,
@@ -248,10 +252,9 @@ class ListMap {
     var copy = this.element.clone();
 
     let workspaceObj = new WorkspaceMap(this.metadata, copy);
-    mapsWorkspace.push(workspaceObj);
+    workspace.maps.push(workspaceObj);
   }
 }
-
 
 class Group {
 
@@ -259,7 +262,7 @@ class Group {
     this.color = color;
     this.maps = [firstMap, secondMap];
     this.expanded = false;
-    this.dragging = true;
+    this.dragging = false;
 
     this.element = this.createGroupDOM(firstMap, secondMap);
 
@@ -450,6 +453,50 @@ class Group {
   }
 }
 
+class Workspace {
+  constructor() {
+    this.metadata = {
+      title: null,
+      description: null,
+      lastEdited: null,
+    }
+
+    this.maps = [];
+    this.groups = [];
+  }
+}
+
+function initializeWorkspace(data) {
+  for (var i = 0; i < 11; i++) {
+    var map = new ListMap(data[i]);
+    mapsList.push(map);
+  }
+
+}
+
 function roundToGrid(num) {
   return Math.ceil((num+1) / 25) * 25;
+}
+
+function saveWorkspace() {
+  console.log(groups);
+
+  var groupData = {
+    'groups': groups
+  }
+
+  //is it a new or existing workspace?
+  $.ajax({
+      url: "http://localhost:8000/saveWorkspace",
+      method: 'POST',
+      data: JSON.stringify(groupData),
+      //dataType: 'json',
+      success: function(response) {
+          console.log(response);
+          console.log("Saved new workspace");
+      },
+      error: function(err) {
+          console.log(err);
+      }
+  });
 }
