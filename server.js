@@ -10,6 +10,7 @@ let bodyParser = require('body-parser');
 
 let db = mongojs(config.uri);
 let mapCollection = db.collection("maps");
+let workspaceCollection = db.collection("workspaces");
 
 
 app.use(express.static('public'));
@@ -36,6 +37,11 @@ app.get('/data', function(request, response) {
 
 app.post('/saveWorkspace', function(request, response) {
   console.log(request.body);
+  workspaceCollection.insert(request.body, function(err, saved) {
+    if (err || !saved) console.log("Not saved");
+    else response.send("saved new workspace");
+  });
+
 })
 
 

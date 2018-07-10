@@ -22,7 +22,19 @@
       <div class="workspace-wrapper">
         <div id="workspace"></div>
       </div>
-      <button id="save" onclick="saveWorkspace()">save workspace</button>
+      <div id="workspace-info">
+        <form>
+          <input id="title" type="text" name="title" placeholder="title"/>
+          <input id="desc" type="text" name="desc" placeholder="description" />
+          <button id="save" onclick="saveWorkspace()" type="button">save workspace</button>
+        </form>
+      </div>
+      <div id="workspace-navigation">
+        <h1>Existing Workspaces</h1>
+        <ul id="existing-workspaces">
+        </ul>
+      </div>
+
     </div>
 
     <script src="refactor.js"></script>

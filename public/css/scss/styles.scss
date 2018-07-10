@@ -7,24 +7,6 @@ body {
   background-image: linear-gradient(to right, #ededed 1px, transparent 1px), linear-gradient(to bottom, #ededed 1px, transparent 1px);
 }
 
-button#save {
-  border: 2px solid #000;
-  font-family: 'Work Sans', sans-serif;
-  font-weight: 700;
-  padding: 10px;
-  font-size: 16px;
-  color: #000;
-  background-color: #fff;
-  position: absolute;
-  right: 50px;
-  bottom: 50px;
-}
-
-button#save:hover {
-  background-color: #000;
-  color: #fff;
-}
-
 #container {
   width: 100%;
   display: flex;
@@ -36,28 +18,77 @@ button#save:hover {
   flex: 1;
 }
 
-#workspace-panel {
+/* ------ WORKSPACE ELEMENTS ------ */
+
+#workspace-info {
   position: absolute;
-  right: 5vh;
-  bottom: 5vh;
-  z-index: 100;
-  width: 350px;
+  top: 50px;
+  right: 50px;
+}
+
+input {
+  float: left;
+  width: 25vw;
+  border: 2px solid transparent;
+  border-bottom: 2px solid #000;
+  background-color: transparent;
   font-family: 'Work Sans', sans-serif;
+  font-weight: 400;
+  padding: 10px;
+  font-size: 16px;
+  margin-right: 10px;
+}
+input:active, input:focus {
+  outline: none;
+  border: 2px solid #000;
+}
+
+button#save {
+  float: left;
+  border: 2px solid #000;
+  font-family: 'Work Sans', sans-serif;
+  font-weight: 700;
+  padding: 10px;
+  font-size: 16px;
+  color: #000;
+  background-color: #fff;
+}
+
+button#save:hover {
+  background-color: #000;
+  color: #fff;
+}
+
+#workspace-navigation {
+  width: 200px;
+  padding: 10px;
+  position: absolute;
+  top: 120px;
+  right: 50px;
+  border: 2px solid #000;
 
   h1 {
     font-size: 16px;
-    font-weight: 600;
-    text-transform: uppercase;
-    border: 2px solid #000;
-    margin: 0;
-    padding: 15px;
+    font-family: 'Work Sans', sans-serif;
+    text-align: left;
+    margin:0;
   }
 
-  p {
-    margin: 0;
-    padding: 15px;
+  ul {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 400;
+    list-style: none;
+    -webkit-padding-start: 0;
+    margin-bottom: 0;
+  }
+
+  li {
+    padding: 0;
   }
 }
+
+
+
 
 
 
@@ -166,9 +197,37 @@ button#save:hover {
   }
 }
 
+.activeInfo {
+  border: 4px solid #000;
+}
+
 
 
 /* ------ INFO PANEL ------ */
+
+#workspace-panel {
+  position: absolute;
+  right: 50px;
+  bottom: 50px;
+  z-index: 100;
+  width: 350px;
+  font-family: 'Work Sans', sans-serif;
+
+  h1 {
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    border: 2px solid #000;
+    margin: 0;
+    padding: 15px;
+  }
+
+  p {
+    margin: 0;
+    padding: 15px;
+  }
+}
+
 .metadata, .post, .images {
   border: 2px solid #000;
   box-sizing: border-box;

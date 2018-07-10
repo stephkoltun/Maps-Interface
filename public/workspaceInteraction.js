@@ -1,6 +1,6 @@
 var mapsList = [];
 
-var workspace = new Workspace;
+var workspace;
 
 var bgColors = ["#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6", "#A30059",
 "#0000A6", "#63FFAC", "#004D43", "#8FB0FF","#5A0007", "#809693", "#1B4400", "#4FC601"];
@@ -107,8 +107,8 @@ class WorkspaceMap {
 
         if (itemsBelow.match == "group") {
           var index = parseInt(itemsBelow.elems[0].id);
-          groups[index].showBackground();
-          this.hoveredOver = groups[index];
+          workspace.groups[index].showBackground();
+          this.hoveredOver = workspace.groups[index];
         } else if (this.hoveredOver!= null && itemsBelow == "none") {
           this.hoveredOver.removeBackground();
           this.hoveredOver = null;
@@ -146,7 +146,7 @@ class WorkspaceMap {
             let id = (itemsBelow.elems[i].dataset.index).toString();
 
             if (id != this.metadata.index) {
-              matchingMap = mapsWorkspace.filter(function(item) {
+              matchingMap = workspace.maps.filter(function(item) {
                 return (item.metadata.index == id? true : false);
               });
             }
@@ -154,7 +154,7 @@ class WorkspaceMap {
 
           if (matchingMap != undefined) {
             console.log("create a new group");
-            let group = new Group(bgColors[groups.length], this, matchingMap[0]);
+            let group = new Group(bgColors[workspace.groups.length], this, matchingMap[0]);
             this.grouped = true;
             matchingMap[0].grouped = true;
             workspace.groups.push(group);
@@ -175,37 +175,40 @@ class WorkspaceMap {
   }
 
   showInfo() {
-    // if ($("#workspace-panel").length >0) {
-    //   $("#workspace-panel").remove();
-    // }
-    //
-    // var title = "<h1>" + this.metadata.title + "</h1>";
-    // var meta = "<div class='metadata'><p class='cat'>" + this.metadata.category + "</p><p class='desc'>" + this.metadata.description + "</p></div>";
-    // var post = "<div class='post'>" + this.metadata.post + "</div>";
-    //
-    // var images = "<div class='images'><div id='image-inset'>";
-    // for (var i = 0; i < this.metadata.images.length; i++) {
-    //   images += "<div class='image-item'><img src='img/" + this.metadata.images[i] + "'/></div>";
-    // }
-    // images += "</div></div>";
-    //
-    // $('<div/>', {
-    //   "id": 'workspace-panel',
-    // }).append(title + meta + post + images).appendTo('.workspace-wrapper');
-    //
-    // $('#image-inset').imagesLoaded( function() {
-    //   console.log("images loaded");
-    //   $('#image-inset').isotope({
-    //     // options...
-    //     itemSelector: '.image-item',
-    //     percentPosition: true,
-    //     cellsByRow: {
-    //       columnWidth:'.image-sizer',
-    //       rowHeight: '.image-sizer'
-    //     }
-    //   });
-    //
-    // });
+    if ($("#workspace-panel").length >0) {
+      $("#workspace-panel").remove();
+    }
+
+    $(".activeInfo").removeClass("activeInfo");
+    this.element.addClass("activeInfo");
+
+    var title = "<h1>" + this.metadata.title + "</h1>";
+    var meta = "<div class='metadata'><p class='cat'>" + this.metadata.category + "</p><p class='desc'>" + this.metadata.description + "</p></div>";
+    var post = "<div class='post'>" + this.metadata.post + "</div>";
+
+    var images = "<div class='images'><div id='image-inset'>";
+    for (var i = 0; i < this.metadata.images.length; i++) {
+      images += "<div class='image-item'><img src='img/" + this.metadata.images[i] + "'/></div>";
+    }
+    images += "</div></div>";
+
+    $('<div/>', {
+      "id": 'workspace-panel',
+    }).append(title + meta + post + images).appendTo('.workspace-wrapper');
+
+    $('#image-inset').imagesLoaded( function() {
+      console.log("images loaded");
+      $('#image-inset').isotope({
+        // options...
+        itemSelector: '.image-item',
+        percentPosition: true,
+        cellsByRow: {
+          columnWidth:'.image-sizer',
+          rowHeight: '.image-sizer'
+        }
+      });
+
+    });
   }
 }
 
@@ -264,6 +267,9 @@ class Group {
     this.expanded = false;
     this.dragging = false;
 
+    this.x = null;
+    this.y = null;
+
     this.element = this.createGroupDOM(firstMap, secondMap);
 
     this.element.on('dblclick', this.toggleView.bind(this));
@@ -274,6 +280,9 @@ class Group {
   createGroupDOM(a, b) {
     var offsetY = b.element.offset().top;
     var offsetX = b.element.offset().left;
+
+    this.x = offsetX-10;
+    this.y = offsetY-10;
 
     a.element.css({
       "border-color": this.color,
@@ -290,7 +299,7 @@ class Group {
 
     var newGroup = $('<div/>', {
         "class": 'workspace-group',
-        "id": (groups.length).toString(),
+        "id": (workspace.groups.length).toString(),
         css: {
           "width": "134px",
           "height": "134px",
@@ -300,6 +309,8 @@ class Group {
         },
     }).append(a.element);
     newGroup.append(b.element);
+
+
 
     $("#workspace").append(newGroup);
 
@@ -327,19 +338,9 @@ class Group {
 
   }
 
-  stackGroup() {
-    // let offset = 10;
-    // let yDifference = otherItems[0].offsetHeight - copiedElement.outerHeight();
-    // let yPosition = otherItems[0].offsetTop - yDifference/2 + offset;
-    // let xDifference = otherItems[0].offsetWidth - copiedElement.outerWidth();
-    // let xPosition = otherItems[0].offsetLeft - xDifference/2 + offset;
-    // copiedElement.css({"top": yPosition + "px", "left": xPosition + "px"});
-  }
-
   shuffle() {
 
   }
-
 
   dragGroup() {
     if (!this.expanded) {
@@ -381,6 +382,9 @@ class Group {
         let leftRound = roundToGrid(elem.offsetLeft - currentX);
         elem.style.top = (topRound - 2) + "px";
         elem.style.left = (leftRound - 2) + "px";
+
+        this.x = elem.style.top;
+        this.y = elem.style.top;
 
         $('#dragging').attr("id", null);
 
@@ -472,31 +476,82 @@ function initializeWorkspace(data) {
     mapsList.push(map);
   }
 
+  workspace = new Workspace;
+
 }
 
 function roundToGrid(num) {
   return Math.ceil((num+1) / 25) * 25;
 }
 
-function saveWorkspace() {
-  console.log(groups);
+function saveWorkspace(e) {
+  workspace.metadata.lastEdited = new Date();
+  workspace.metadata.title = $("#title").val();
+  workspace.metadata.description = $("#desc").val();
+  var workspaceData = {
+    metadata: JSON.parse(JSON.stringify(workspace.metadata)),
+    width: $(window).width(),
+    height: $(window).height(),
+    maps: [],
+    groups: []
+  };
 
-  var groupData = {
-    'groups': groups
+  //console.log(workspace.maps);
+
+  for (var map in workspace.maps) {
+    let tempObj = {
+      metadata: workspace.maps[map].metadata,
+      x: workspace.maps[map].x,
+      y: workspace.maps[map].y,
+      grouped: workspace.maps[map].grouped,
+    };
+
+    workspaceData.maps.push(tempObj);
+  };
+
+  for (var group in workspace.groups) {
+    let tempGroup = {
+      color: workspace.groups[group].color,
+      expanded: workspace.groups[group].expanded,
+      x: workspace.groups[group].x,
+      y: workspace.groups[group].y,
+      maps: []
+    }
+
+    for (var map in workspace.groups[group].maps) {
+      let temp = workspace.groups[group].maps;
+      let tempMap  = {
+        metadata: temp[map].metadata,
+        x: temp[map].x,
+        y: temp[map].y,
+        grouped: temp[map].grouped,
+      }
+
+      tempGroup.maps.push(tempMap);
+    }
+
+    workspaceData.groups.push(tempGroup);
   }
+
+  console.log(workspaceData);
+
 
   //is it a new or existing workspace?
   $.ajax({
       url: "http://localhost:8000/saveWorkspace",
       method: 'POST',
-      data: JSON.stringify(groupData),
+      data: JSON.parse(JSON.stringify(workspaceData)),
       //dataType: 'json',
       success: function(response) {
           console.log(response);
-          console.log("Saved new workspace");
+          addWorkspaceToList(workspaceData.metadata.title);
       },
       error: function(err) {
           console.log(err);
       }
   });
+}
+
+function addWorkspaceToList(title) {
+  $("#existing-workspaces").append("<li>" + title + "</li>")
 }
