@@ -465,22 +465,35 @@ class Workspace {
       lastEdited: null,
     }
 
+    this.id = null;
+    this.height = null;
+    this.width = null;
+
     this.maps = [];
     this.groups = [];
   }
-}
 
+  populateWorkspace() {
 
-
-function initializeWorkspace(data) {
-  for (var i = 0; i < 11; i++) {
-    var map = new ListMap(data[i]);
-    mapsList.push(map);
   }
 
-  workspace = new Workspace;
 
+  updateWorkspace(newSpace) {
+
+    this.metadata = newSpace.metadata;
+    this.maps = newSpace.maps;
+    this.groups = newSpace.maps;
+    this.prevHeight = newSpace.height;
+    this.prevWidth = newSpace.width;
+
+    this.id = newSpace._id;
+
+    console.log(this);
+  }
 }
+
+
+
 
 function roundToGrid(num) {
   return Math.ceil((num+1) / 25) * 25;

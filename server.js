@@ -23,17 +23,36 @@ app.get('/refactor', function(request, response) {
 })
 
 app.get('/data', function(request, response) {
-  console.log("collect maps");
+  console.log("collect maps and workspaces");
   mapCollection.find(function(err, maps) {
     if (err) {
       console.log(err);
     } else {
-      console.log("received maps from DB");
-      response.send(maps)
+
+      workspaceCollection.find({}, {"metadata":true}, function(error, spaces) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log("received all maps and workspaces from DB");
+          response.send({"maps":maps, "spaces":spaces});
+        }
+      })
     }
   });
 });
 
+app.post('/workspace', function(request, response) {
+  console.log("find workspace " + request.body.id);
+
+  workspaceCollection.findOne({_id: mongojs.ObjectId(request.body.id)}, function(error, space) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("received workspace details");
+        response.send(space);
+      }
+  })
+})
 
 app.post('/saveWorkspace', function(request, response) {
   console.log(request.body);
