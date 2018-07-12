@@ -72,7 +72,7 @@ button#save:hover {
   z-index: 2000;
   box-sizing: border-box;
   width: 300px;
-  height: calc(100vh - 102px);;
+  max-height: calc(100vh - 102px);;
   margin: 50px;
 
   position: absolute;
@@ -92,6 +92,10 @@ button#save:hover {
         font-size: 16px;
         font-family: 'Work Sans', sans-serif;
         color: #000;
+      }
+
+      h1:hover {
+        cursor: pointer;
       }
 
       .unselected {
@@ -118,6 +122,10 @@ button#save:hover {
     background-size: cover;
     position: relative;
     border: 1px solid #000;
+  }
+
+  .list-item:hover {
+    cursor: move;
   }
 
   .list-item h1 {
