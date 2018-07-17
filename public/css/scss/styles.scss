@@ -18,6 +18,15 @@ body {
   flex: 1;
 }
 
+#linespace {
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
 /* ------ WORKSPACE ELEMENTS ------ */
 
 #workspace-info {
@@ -28,7 +37,7 @@ body {
 
 input {
   float: left;
-  width: 25vw;
+  width: calc((100vw - 650px)/2);
   border: 2px solid transparent;
   border-bottom: 2px solid #000;
   background-color: transparent;
@@ -222,7 +231,7 @@ button#save:hover {
 
 /* ------ INFO PANEL ------ */
 
-#workspace-panel {
+#info-panel {
   position: absolute;
   right: 50px;
   bottom: 50px;
@@ -248,12 +257,15 @@ button#save:hover {
 .metadata, .post, .images {
   border: 2px solid #000;
   box-sizing: border-box;
+  overflow: scroll;
+  max-height: calc((100vh - 200px)/5);
 }
 
 .metadata {
   width: 100%;
   display: flex;
   flex-direction: row
+
 }
 
 .cat {

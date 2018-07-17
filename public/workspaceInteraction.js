@@ -1,11 +1,13 @@
 var mapsList = [];
-
 var workspace;
+
 
 var bgColors = ["#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6", "#A30059",
 "#0000A6", "#63FFAC", "#004D43", "#8FB0FF","#5A0007", "#809693", "#1B4400", "#4FC601"];
 
 var tileSize = 100;
+
+
 
 class WorkspaceMap {
   constructor(obj, tempX, tempY, drag) {
@@ -27,20 +29,28 @@ class WorkspaceMap {
     this.dragging = drag;
     this.grouped = false;
     this.hoveredOver = null;
+    this.linkedRight = false;
+    this.linkedLeft = false;
 
     // add it to the DOM
     this.element = this.createDOM();
     this.element.appendTo('#workspace');
 
+
     if (drag) {
       this.dragElement();
+    } else {
+      this.addNodes();
     }
 
-
     // make sure it's clickable
-    this.element.on('mousedown', this.dragElement.bind(this)); // bind the whole object, rather than just the DOM element
+    this.element.on('mousedown', this.dragElement.bind(this));
     this.element.on('click', this.showInfo.bind(this));
+    this.element.on('mouseenter', this.showNodes.bind(this));
+    this.element.on('mouseleave', this.hideNodes.bind(this));
   }
+
+
 
   createDOM() {
     return $('<div/>', {
@@ -85,7 +95,6 @@ class WorkspaceMap {
   }
 
   dragElement() {
-
     if (!this.grouped) {
       this.element.attr("id","dragging");
       this.element.addClass("active");
@@ -110,6 +119,18 @@ class WorkspaceMap {
         let elem = document.getElementById("dragging");
         elem.style.top = (elem.offsetTop - currentY) + "px";
         elem.style.left = (elem.offsetLeft - currentX) + "px";
+
+        this.hideNodes();
+        // if we want to show them while moving - like when connected
+        // $(this.leftNode).attr({
+        //   "cx": parseInt($(this.leftNode).attr("cx")) + e.movementX,
+        //   "cy": parseInt($(this.leftNode).attr("cy")) + e.movementY
+        // });
+        //
+        // $(this.rightNode).attr({
+        //   "cx": parseInt($(this.rightNode).attr("cx")) + e.movementX,
+        //   "cy": parseInt($(this.rightNode).attr("cy")) + e.movementY
+        // });
 
         let itemsBelow = this.checkBelow(e.clientX, e.clientY);
 
@@ -142,6 +163,23 @@ class WorkspaceMap {
 
         $('#dragging').removeClass('active');
         $('#dragging').attr("id", null);
+
+        if (this.leftNode == null) {
+          this.addNodes();
+          this.showNodes();
+        } else {
+          this.showNodes();
+          $(this.leftNode).attr({
+            "cx": leftRound - 3,
+            "cy": topRound + tileSize/2
+          });
+
+          $(this.rightNode).attr({
+            "cx": leftRound + tileSize + 5,
+            "cy": topRound + tileSize/2
+          });
+        }
+
 
         let itemsBelow = this.checkBelow(e.clientX, e.clientY);
 
@@ -198,13 +236,149 @@ class WorkspaceMap {
     workspace.maps.splice(arrayIndex, 1);
   }
 
-  showInfo() {
-    if ($("#workspace-panel").length >0) {
-      $("#workspace-panel").remove();
+  addNodes() {
+    this.rightNode = this.createNode('right');
+    this.leftNode = this.createNode('left');
+    this.rightNode.appendTo("#linespace");
+    this.leftNode.appendTo("#linespace");
+
+    this.hideNodes();
+
+    this.rightNode.on('mousedown', this.addLink.bind(this));
+  }
+
+  createNode(side) {
+    var x, y;
+
+    typeof this.x === "number" ? x = this.x : x = parseInt(this.x.replace("px"));
+
+    typeof this.y === "number" ? y = this.y : y = parseInt(this.y.replace("px"));
+
+    if (side == "right") {
+      x += (tileSize+4);
+    }
+    y += (tileSize/2 + 2);
+
+    return $(SVG('circle'))
+      .attr('mydata:mapObj', this.metadata.title)
+      .attr("class", "grip")
+      .attr('cx',x)
+      .attr('cy',y)
+      .attr('r', 6)
+      .attr('fill', "#cccccc");
+  }
+
+  hideNodes() {
+    if (!this.linkedRight && !this.linkedLeft) {
+      let elementsBelow = document.elementsFromPoint(window.event.clientX, window.event.clientY);
+
+      let circleBelow = elementsBelow.filter(function(item) {
+        return (item.className.baseVal == "grip" ? true : false);
+      });
+
+      if (circleBelow.length == 0) {
+        $(this.leftNode).attr("opacity",0);
+        $(this.rightNode).attr("opacity",0);
+      }
+    }
+  }
+
+  showNodes() {
+    $(this.leftNode).attr("opacity",1);
+    $(this.rightNode).attr("opacity",1);
+  }
+
+
+  addLink() {
+    var e = window.event;
+    var startX = $(this.rightNode).attr("cx");
+    var startY = $(this.rightNode).attr("cy");
+
+    this.rightNode.attr("fill","#aa11ee");
+
+    $(SVG('line'))
+      .attr("id", "newLink")
+      .attr("class", "link")
+      .attr({
+        'x1': startX,
+        'y1': startY,
+        'x2': startX,
+        'y2': startY
+      })
+      .css({
+        "stroke": "#aa11ee",
+        "stroke-width": "2px"
+      })
+      .appendTo("#linespace");
+
+      document.onmousemove = moveLine.bind(this); // call a function whenever the cursor moves:
+      document.onmouseup = checkLine.bind(this); // stop the dragging
+
+    function moveLine(e) {
+      e = e || window.event;
+      $("#newLink").attr("x2", e.clientX);
+      $("#newLink").attr("y2", e.clientY);
     }
 
-    $(".activeInfo").removeClass("activeInfo");
+    function checkLine(e) {
+      document.onmouseup = null;
+      document.onmousemove = null;
+
+      let elementsBelow = document.elementsFromPoint(e.clientX, e.clientY);
+
+      let circleBelow = elementsBelow.filter(function(item) {
+        return (item.className.baseVal == "grip" ? true : false);
+      });
+
+      if (circleBelow.length != 0) {
+        console.log(circleBelow[0]);
+        let endX = $(circleBelow[0]).attr("cx");
+        let endY = $(circleBelow[0]).attr("cy");
+        $(circleBelow[0]).attr("fill", "#aa11ee");
+
+        //find the matching map object
+        var matchTitle = $(circleBelow[0]).attr("mydata:mapObj");
+        console.log(matchTitle);
+        var matchingMap = workspace.maps.filter(function(item) {
+          return (item.metadata.title == matchTitle ? true : false);
+        });
+        // update the now-linked objects
+        this.linkedRight = true;
+        matchingMap[0].linkedLeft = true;
+        matchingMap[0].showNodes();
+
+
+        $("#newLink").attr("x2", endX);
+        $("#newLink").attr("y2", endY);
+        $("#newLink").attr("id", null);
+      } else {
+        if (!this.linkedRight) {
+          this.rightNode.attr("fill", "#cccccc");
+        }
+        if (!this.linkedRight && !this.linkedLeft) {
+          this.hideNodes();
+        }
+
+        $("#newLink").remove();
+      }
+    }
+  }
+
+  showInfo() {
+    if ($("#info-panel").length >0) {
+      $("#info-panel").remove();
+    }
+
+    if ($(".activeInfo").length > 0) {
+      let prevLeft = $(".activeInfo").offset().left;
+      $(".activeInfo").offset({left: prevLeft+2 });
+      $(".activeInfo").removeClass("activeInfo");
+    }
+
     this.element.addClass("activeInfo");
+    let curPosition = this.element.offset().left;
+    this.element.offset({left: curPosition-2 });
+
 
     var title = "<h1>" + this.metadata.title + "</h1>";
     var meta = "<div class='metadata'><p class='cat'>" + this.metadata.category + "</p><p class='desc'>" + this.metadata.description + "</p></div>";
@@ -217,7 +391,7 @@ class WorkspaceMap {
     images += "</div></div>";
 
     $('<div/>', {
-      "id": 'workspace-panel',
+      "id": 'info-panel',
     }).append(title + meta + post + images).appendTo('.workspace-wrapper');
 
     $('#image-inset').imagesLoaded( function() {
@@ -235,6 +409,7 @@ class WorkspaceMap {
     });
   }
 }
+
 
 class ListMap {
 
@@ -475,6 +650,15 @@ class Group {
   }
 }
 
+class Link {
+  constructor(firstObject, secondObject, color) {
+    this.color = color;
+    this.type;
+    this.startNode;
+    this.endNode;
+  }
+}
+
 class Workspace {
   constructor() {
     this.metadata = {
@@ -489,6 +673,7 @@ class Workspace {
 
     this.maps = [];
     this.groups = [];
+    this.links = [];
   }
 
   populate() {
@@ -545,8 +730,13 @@ class Workspace {
   clearItems() {
     $(".workspace-group").remove();
     $(".workspace-item").remove();
+    $(".grip").remove();
+    $(".link").remove();
   }
 
+  addWorkspaceToList(title) {
+    $("#existing-workspaces").append("<li>" + title + "</li>")
+  }
 
   update(newSpace) {
     this.metadata = newSpace.metadata;
@@ -564,12 +754,10 @@ class Workspace {
   }
 }
 
+$(document).on("click", function(e) {
+  console.log(e);
+})
 
-
-
-function roundToGrid(num) {
-  return Math.ceil((num+1) / 25) * 25;
-}
 
 function saveWorkspace(e) {
   workspace.metadata.lastEdited = new Date();
@@ -630,14 +818,10 @@ function saveWorkspace(e) {
       //dataType: 'json',
       success: function(response) {
           console.log(response);
-          addWorkspaceToList(workspaceData.metadata.title);
+          workspace.addWorkspaceToList(workspaceData.metadata.title);
       },
       error: function(err) {
           console.log(err);
       }
   });
-}
-
-function addWorkspaceToList(title) {
-  $("#existing-workspaces").append("<li>" + title + "</li>")
 }
