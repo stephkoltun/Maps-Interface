@@ -32,10 +32,11 @@ class WorkspaceMap {
     this.linkedRight = false;
     this.linkedLeft = false;
 
+    this.linkIndex = null;
+
     // add it to the DOM
     this.element = this.createDOM();
     this.element.appendTo('#workspace');
-
 
     if (drag) {
       this.dragElement();
@@ -49,8 +50,6 @@ class WorkspaceMap {
     this.element.on('mouseenter', this.showNodes.bind(this));
     this.element.on('mouseleave', this.hideNodes.bind(this));
   }
-
-
 
   createDOM() {
     return $('<div/>', {
@@ -117,8 +116,11 @@ class WorkspaceMap {
         previousY = e.clientY;
         // set the element's new position:
         let elem = document.getElementById("dragging");
-        elem.style.top = (elem.offsetTop - currentY) + "px";
-        elem.style.left = (elem.offsetLeft - currentX) + "px";
+        let xChange = elem.offsetLeft - currentX;
+        let yChange = elem.offsetTop - currentY;
+        elem.style.left = xChange + "px";
+        elem.style.top = yChange + "px";
+
 
         this.hideNodes();
         // if we want to show them while moving - like when connected
@@ -131,6 +133,17 @@ class WorkspaceMap {
         //   "cx": parseInt($(this.rightNode).attr("cx")) + e.movementX,
         //   "cy": parseInt($(this.rightNode).attr("cy")) + e.movementY
         // });
+
+        this.moveNodeBy($(this.leftNode), e.movementX, e.movementY);
+        this.moveNodeBy($(this.rightNode), e.movementX, e.movementY);
+
+        if (this.linkedRight) {
+          workspace.links[this.linkIndex].moveStartBy(e.movementX, e.movementY);
+        }
+
+        if (this.linkedLeft) {
+          workspace.links[this.linkIndex].moveEndBy(e.movementX, e.movementY);
+        }
 
         let itemsBelow = this.checkBelow(e.clientX, e.clientY);
 
@@ -169,21 +182,21 @@ class WorkspaceMap {
           this.showNodes();
         } else {
           this.showNodes();
-          $(this.leftNode).attr({
-            "cx": leftRound - 3,
-            "cy": topRound + tileSize/2
-          });
+          this.moveNodeTo($(this.leftNode), leftRound - 3, topRound + tileSize/2);
+          this.moveNodeTo($(this.rightNode), leftRound + tileSize + 5, topRound + tileSize/2);
 
-          $(this.rightNode).attr({
-            "cx": leftRound + tileSize + 5,
-            "cy": topRound + tileSize/2
-          });
+          if (this.linkedRight) {
+            workspace.links[this.linkIndex].moveStartTo(leftRound + tileSize + 5, topRound + tileSize/2);
+          }
+
+          if (this.linkedLeft) {
+            workspace.links[this.linkIndex].moveEndTo(leftRound - 3, topRound + tileSize/2);
+          }
+
         }
 
 
         let itemsBelow = this.checkBelow(e.clientX, e.clientY);
-
-
         if (itemsBelow.match == "map") {
 
           var matchingMap;
@@ -270,8 +283,11 @@ class WorkspaceMap {
 
   hideNodes() {
     if (!this.linkedRight && !this.linkedLeft) {
-      let elementsBelow = document.elementsFromPoint(window.event.clientX, window.event.clientY);
 
+      let xBelow = window.event.clientX || 0;
+      let yBelow = window.event.clientY || 0;
+
+      let elementsBelow = document.elementsFromPoint(xBelow, yBelow);
       let circleBelow = elementsBelow.filter(function(item) {
         return (item.className.baseVal == "grip" ? true : false);
       });
@@ -288,6 +304,21 @@ class WorkspaceMap {
     $(this.rightNode).attr("opacity",1);
   }
 
+  moveNodeBy(nodeTemp, moveX, moveY) {
+    let prevX = nodeTemp.attr("cx");
+    let newX = parseInt(prevX) + parseInt(moveX);
+    let prevY = nodeTemp.attr("cy");
+    let newY = parseInt(prevY) + parseInt(moveY);
+    nodeTemp.attr("cx", newX);
+    nodeTemp.attr("cy", newY);
+  }
+
+  moveNodeTo(nodeTemp, newX, newY) {
+    nodeTemp.attr({
+      "cx": newX,
+      "cy": newY
+    });
+  }
 
   addLink() {
     var e = window.event;
@@ -296,7 +327,7 @@ class WorkspaceMap {
 
     this.rightNode.attr("fill","#aa11ee");
 
-    $(SVG('line'))
+    var linkElem = $(SVG('line'))
       .attr("id", "newLink")
       .attr("class", "link")
       .attr({
@@ -308,19 +339,22 @@ class WorkspaceMap {
       .css({
         "stroke": "#aa11ee",
         "stroke-width": "2px"
-      })
-      .appendTo("#linespace");
+      });
 
-      document.onmousemove = moveLine.bind(this); // call a function whenever the cursor moves:
-      document.onmouseup = checkLine.bind(this); // stop the dragging
+    var newLink = new Link(this, "#aa11ee", linkElem);
+    newLink.element.appendTo("#linespace");
 
-    function moveLine(e) {
+    document.onmousemove = moveLinkEnd.bind(this); // call a function whenever the cursor moves:
+    document.onmouseup = checkLinkEnd.bind(this); // stop the dragging
+
+
+    function moveLinkEnd(e) {
       e = e || window.event;
-      $("#newLink").attr("x2", e.clientX);
-      $("#newLink").attr("y2", e.clientY);
+      newLink.element.attr("x2", e.clientX);
+      newLink.element.attr("y2", e.clientY);
     }
 
-    function checkLine(e) {
+    function checkLinkEnd(e) {
       document.onmouseup = null;
       document.onmousemove = null;
 
@@ -331,14 +365,13 @@ class WorkspaceMap {
       });
 
       if (circleBelow.length != 0) {
-        console.log(circleBelow[0]);
+
         let endX = $(circleBelow[0]).attr("cx");
         let endY = $(circleBelow[0]).attr("cy");
         $(circleBelow[0]).attr("fill", "#aa11ee");
 
         //find the matching map object
         var matchTitle = $(circleBelow[0]).attr("mydata:mapObj");
-        console.log(matchTitle);
         var matchingMap = workspace.maps.filter(function(item) {
           return (item.metadata.title == matchTitle ? true : false);
         });
@@ -347,10 +380,16 @@ class WorkspaceMap {
         matchingMap[0].linkedLeft = true;
         matchingMap[0].showNodes();
 
+        // let newID = "link" + this.metadata.index + "-" + matchingMap[0].metadata.index;
+        newLink.element.attr("x2", endX);
+        newLink.element.attr("y2", endY);
+        newLink.element.attr("id", null);
 
-        $("#newLink").attr("x2", endX);
-        $("#newLink").attr("y2", endY);
-        $("#newLink").attr("id", null);
+        newLink.addEnd(matchingMap[0]);
+        this.linkIndex = workspace.links.length;
+        matchingMap[0].linkIndex = workspace.links.length;
+        workspace.links.push(newLink);
+
       } else {
         if (!this.linkedRight) {
           this.rightNode.attr("fill", "#cccccc");
@@ -359,7 +398,7 @@ class WorkspaceMap {
           this.hideNodes();
         }
 
-        $("#newLink").remove();
+        newLink.element.remove();
       }
     }
   }
@@ -651,11 +690,50 @@ class Group {
 }
 
 class Link {
-  constructor(firstObject, secondObject, color) {
+  constructor(firstObject, color, elem) {
     this.color = color;
-    this.type;
-    this.startNode;
-    this.endNode;
+    this.type = "primary";
+    this.startNode = firstObject;
+    this.endNode = null;
+
+    this.element = elem;
+  }
+
+  addEnd(obj) {
+    this.endNode = obj;
+  }
+
+  moveStartBy(tempX, tempY) {
+    let prevX = this.element.attr("x1");
+    let newX = tempX + parseInt(prevX);
+    this.element.attr("x1", newX);
+
+    let prevY = this.element.attr("y1");
+    let newY = tempY + parseInt(prevY);
+    this.element.attr("y1", newY);
+  }
+
+  moveStartTo(tempX, tempY) {
+    this.element.attr({
+      "x1": tempX,
+      "y1": tempY
+    });
+  }
+
+  moveEndBy(tempX, tempY) {
+    let prevX = this.element.attr("x2");
+    let newX = tempX + parseInt(prevX);
+    this.element.attr("x2", newX);
+
+    let prevY = this.element.attr("y2");
+    let newY = tempY + parseInt(prevY);
+    this.element.attr("y2", newY);
+  }
+  moveEndTo(tempX, tempY) {
+    this.element.attr({
+      "x2": tempX,
+      "y2": tempY
+    });
   }
 }
 
@@ -749,15 +827,8 @@ class Workspace {
 
     this.clearItems();
     this.populate();
-
-    console.log(this);
   }
 }
-
-$(document).on("click", function(e) {
-  console.log(e);
-})
-
 
 function saveWorkspace(e) {
   workspace.metadata.lastEdited = new Date();

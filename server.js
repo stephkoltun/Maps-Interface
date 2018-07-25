@@ -18,8 +18,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({ extended: false }));
 
-app.get('/refactor', function(request, response) {
-  response.sendFile('public/refactor.html', {root: __dirname })
+app.get('/', function(request, response) {
+  response.sendFile('public/index.html', {root: __dirname })
 })
 
 app.get('/data', function(request, response) {

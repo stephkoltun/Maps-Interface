@@ -47,6 +47,7 @@ $(document).on("click", ".space-item", function() {
       dataType: 'json',
       success: function(newSpace) {
           console.log("received workspace");
+          console.log(newSpace);
           workspace.update(newSpace);
       },
       error: function() {
