@@ -1,4 +1,3 @@
-draw = SVG('drawing');
 // Get map data from the database
 $.ajax({
     url: "http://localhost:8000/data",
