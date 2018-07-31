@@ -8,6 +8,7 @@ body {
 }
 
 
+
 #container {
   width: 100%;
   display: flex;
@@ -22,7 +23,7 @@ body {
 #linespace {
   width: 100vw;
   height: 100vh;
-  z-index: -1;
+  z-index: 10;
   position: absolute;
   top: 0;
   left: 0;
@@ -222,6 +223,14 @@ button#save:hover {
     font-weight: 700;
     color: #000;
   }
+}
+
+.inactive > rect {
+  stroke-width: 5;
+}
+
+.active > rect {
+  stroke-width: 8;
 }
 
 .activeInfo {

@@ -25,12 +25,11 @@ class WorkspaceMap {
 
     // add it to the DOM
     this.element = this.createDOM();
-    this.element.appendTo('#workspace');
+    this.element.appendTo("#linespace");
 
     if (drag) {
       this.dragElement();
     } else {
-      this.addNodes();
     }
 
     // make sure it's clickable
@@ -42,17 +41,48 @@ class WorkspaceMap {
 
   createDOM() {
 
-    return $('<div/>', {
-      "css": {
-        "left": this.x + "px",
-        "top": this.y + "px",
-        "background-image": 'url("img/' + this.metadata.thumb + '")',
-      },
-      "class": 'workspace-item',
-      "data-title": this.metadata.title,
-      "data-index": this.metadata.index,
-      "data-category": this.metadata.category,
-    });
+    var el = $(SVG('g'))
+      .attr('mydata:mapObj', this.metadata.title)
+      .attr('class', "active")
+      .attr("transform", "translate(" + this.x + ","+this.y+")");
+
+    var img = $(SVGimage("img/" + this.metadata.thumb)).attr({
+      "width": tileSize,
+      "height": tileSize,
+      "preserveAspectRatio": "xMinYMin slice"
+    })
+
+    var border = $(SVG('rect'))
+    .attr({
+      "width": tileSize,
+      "height": tileSize,
+      "stroke": "#000",
+      "fill": "none"
+    })
+
+
+    var nodeRight = $(SVG('circle'))
+      .attr('mydata:mapObj', this.metadata.title)
+      .attr('class', 'grip')
+      .attr('cx',-2.5)
+      .attr('cy',tileSize/2)
+      .attr('r', 6)
+      .attr('fill', "#cccccc");
+
+    var nodeLeft = $(SVG('circle'))
+      .attr('mydata:mapObj', this.metadata.title)
+      .attr('class', 'grip')
+      .attr('cx',tileSize + 2.5)
+      .attr('cy',tileSize/2)
+      .attr('r', 6)
+      .attr('fill', "#cccccc");
+
+    nodeRight.appendTo(el);
+    nodeLeft.appendTo(el);
+    border.appendTo(el);
+    img.appendTo(el);
+
+    return el
   }
 
   checkBelow(x,y) {
@@ -106,13 +136,14 @@ class WorkspaceMap {
         previousY = e.clientY;
         // set the element's new position:
         let elem = document.getElementById("dragging");
-        let xChange = elem.offsetLeft - currentX;
-        let yChange = elem.offsetTop - currentY;
-        elem.style.left = xChange + "px";
-        elem.style.top = yChange + "px";
 
+        let transform = parseTransform(elem);
+        let xChange = parseInt(transform.translate[0]) - currentX;
+        let yChange = parseInt(transform.translate[1]) - currentY;
+        $(elem).attr("transform", "translate(" + xChange + "," + yChange +")");
 
-        this.hideNodes();
+        //this.hideNodes();
+
         // if we want to show them while moving - like when connected
         // $(this.leftNode).attr({
         //   "cx": parseInt($(this.leftNode).attr("cx")) + e.movementX,
@@ -124,27 +155,27 @@ class WorkspaceMap {
         //   "cy": parseInt($(this.rightNode).attr("cy")) + e.movementY
         // });
 
-        this.moveNodeBy($(this.leftNode), e.movementX, e.movementY);
-        this.moveNodeBy($(this.rightNode), e.movementX, e.movementY);
-
-        if (this.linkedRight) {
-          workspace.links[this.linkIndex].moveStartBy(e.movementX, e.movementY);
-        }
-
-        if (this.linkedLeft) {
-          workspace.links[this.linkIndex].moveEndBy(e.movementX, e.movementY);
-        }
-
-        let itemsBelow = this.checkBelow(e.clientX, e.clientY);
-
-        if (itemsBelow.match == "group") {
-          var index = parseInt(itemsBelow.elems[0].id);
-          workspace.groups[index].showBackground();
-          this.hoveredOver = workspace.groups[index];
-        } else if (this.hoveredOver!= null && itemsBelow == "none") {
-          this.hoveredOver.removeBackground();
-          this.hoveredOver = null;
-        }
+        // this.moveNodeBy($(this.leftNode), e.movementX, e.movementY);
+        // this.moveNodeBy($(this.rightNode), e.movementX, e.movementY);
+        //
+        // if (this.linkedRight) {
+        //   workspace.links[this.linkIndex].moveStartBy(e.movementX, e.movementY);
+        // }
+        //
+        // if (this.linkedLeft) {
+        //   workspace.links[this.linkIndex].moveEndBy(e.movementX, e.movementY);
+        // }
+        //
+        // let itemsBelow = this.checkBelow(e.clientX, e.clientY);
+        //
+        // if (itemsBelow.match == "group") {
+        //   var index = parseInt(itemsBelow.elems[0].id);
+        //   workspace.groups[index].showBackground();
+        //   this.hoveredOver = workspace.groups[index];
+        // } else if (this.hoveredOver!= null && itemsBelow == "none") {
+        //   this.hoveredOver.removeBackground();
+        //   this.hoveredOver = null;
+        //}
       }
 
       function stopDraggingElement(e) {
@@ -156,71 +187,64 @@ class WorkspaceMap {
 
         // snap to grid
         let elem = document.getElementById("dragging");
-        let topRound = roundToGrid(elem.offsetTop - currentY);
-        let leftRound = roundToGrid(elem.offsetLeft - currentX);
-        elem.style.top = (topRound - 2) + "px";
-        elem.style.left = (leftRound - 2) + "px";
 
-        this.x = elem.style.left;
-        this.y = elem.style.top;
+        let transform = parseTransform(elem);
+        let xChange = roundToGrid(parseInt(transform.translate[0]) - currentX);
+        let yChange = roundToGrid(parseInt(transform.translate[1]) - currentY);
+        $(elem).attr("transform", "translate(" + xChange + "," + yChange +")");
 
+        this.x = xChange;
+        this.y = yChange;
+
+        $('#dragging').addClass('inactive');
         $('#dragging').removeClass('active');
+
         $('#dragging').attr("id", null);
 
-        if (this.leftNode == null) {
-          this.addNodes();
-          this.showNodes();
-        } else {
-          this.showNodes();
-          this.moveNodeTo($(this.leftNode), leftRound - 3, topRound + tileSize/2);
-          this.moveNodeTo($(this.rightNode), leftRound + tileSize + 5, topRound + tileSize/2);
-
-          if (this.linkedRight) {
-            workspace.links[this.linkIndex].moveStartTo(leftRound + tileSize + 5, topRound + tileSize/2);
-          }
-
-          if (this.linkedLeft) {
-            workspace.links[this.linkIndex].moveEndTo(leftRound - 3, topRound + tileSize/2);
-          }
-
-        }
-
-
-        let itemsBelow = this.checkBelow(e.clientX, e.clientY);
-        if (itemsBelow.match == "map") {
-
-          var matchingMap;
-
-          for (var i = 0; i < itemsBelow.elems.length; i++) {
-            let id = (itemsBelow.elems[i].dataset.index).toString();
-
-            if (id != this.metadata.index) {
-              matchingMap = workspace.maps.filter(function(item) {
-                return (item.metadata.index == id? true : false);
-              });
-            }
-          }
-
-          if (matchingMap != undefined) {
-            console.log("create a new group");
-            var x = matchingMap[0].element.offset().left;
-            var y = matchingMap[0].element.offset().top;
-            let group = new Group(bgColors[workspace.groups.length], this, matchingMap[0], x, y);
-            this.grouped = true;
-            matchingMap[0].grouped = true;
-            workspace.groups.push(group);
-
-            this.removeFromArray();
-            matchingMap[0].removeFromArray();
-          }
-        } else if (itemsBelow.match == "group" && !this.grouped) {
-          console.log("add to existing group!");
-
-          var index = parseInt(itemsBelow.elems[0].id);
-          workspace.groups[index].addMap(this);
-          this.grouped = true;
-          this.removeFromArray();
-        }
+        // if (this.linkedRight) {
+        //   workspace.links[this.linkIndex].moveStartTo(leftRound + tileSize + 5, topRound + tileSize/2);
+        // }
+        //
+        // if (this.linkedLeft) {
+        //   workspace.links[this.linkIndex].moveEndTo(leftRound - 3, topRound + tileSize/2);
+        // }
+        //
+        //
+        // let itemsBelow = this.checkBelow(e.clientX, e.clientY);
+        // if (itemsBelow.match == "map") {
+        //
+        //   var matchingMap;
+        //
+        //   for (var i = 0; i < itemsBelow.elems.length; i++) {
+        //     let id = (itemsBelow.elems[i].dataset.index).toString();
+        //
+        //     if (id != this.metadata.index) {
+        //       matchingMap = workspace.maps.filter(function(item) {
+        //         return (item.metadata.index == id? true : false);
+        //       });
+        //     }
+        //   }
+        //
+        //   if (matchingMap != undefined) {
+        //     console.log("create a new group");
+        //     var x = matchingMap[0].element.offset().left;
+        //     var y = matchingMap[0].element.offset().top;
+        //     let group = new Group(bgColors[workspace.groups.length], this, matchingMap[0], x, y);
+        //     this.grouped = true;
+        //     matchingMap[0].grouped = true;
+        //     workspace.groups.push(group);
+        //
+        //     this.removeFromArray();
+        //     matchingMap[0].removeFromArray();
+        //   }
+        // } else if (itemsBelow.match == "group" && !this.grouped) {
+        //   console.log("add to existing group!");
+        //
+        //   var index = parseInt(itemsBelow.elems[0].id);
+        //   workspace.groups[index].addMap(this);
+        //   this.grouped = true;
+        //   this.removeFromArray();
+        // }
 
         setTimeout(function() {
           this.dragging = false;
