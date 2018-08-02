@@ -12,6 +12,8 @@ let db = mongojs(config.uri);
 let mapCollection = db.collection("maps");
 let workspaceCollection = db.collection("workspaces");
 
+let documentCollection = db.collection("documents");
+
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -21,6 +23,27 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.get('/', function(request, response) {
   response.sendFile('public/index.html', {root: __dirname })
 })
+
+app.get('/all', function(request, response) {
+  documentCollection.find(function(err, docs) {
+    if (err) {
+      console.log(err);
+    } else {
+      response.send({"docs":docs});
+    }
+  })
+})
+
+app.get('/single/:id', function(request, response) {
+  documentCollection.findOne({"_id": request.params.id}, function(err, doc) {
+    if (err) {
+      console.log(err);
+    } else {
+      response.send(doc);
+    }
+  })
+})
+
 
 app.get('/data', function(request, response) {
   console.log("collect maps and workspaces");

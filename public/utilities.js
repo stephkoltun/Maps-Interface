@@ -1,3 +1,9 @@
+var tileSize = 100;
+var bgColors = ["#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6", "#A30059",
+"#0000A6", "#63FFAC", "#004D43", "#8FB0FF","#5A0007", "#809693", "#1B4400", "#4FC601"];
+
+
+
 function roundToGrid(num) {
   return Math.ceil((num+1) / 25) * 25;
 }
@@ -22,6 +28,25 @@ function parseTransform(el) {
         b[c.shift()] = c;
     }
     return b;
+}
+
+function getItem(id) {
+  var url = "http://localhost:8000/single/" + id;
+
+  return new Promise(function (resolve, reject) {
+    $.ajax({
+      url: url,
+      type: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        resolve(data);
+      },
+      error: function(error) {
+        console.log(error);
+        reject(error);
+      }
+    });
+  })
 }
 
 $(document).on("click", "svg#linespace", function(e) {

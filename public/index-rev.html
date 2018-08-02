@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Maps Interface</title>
+    <link rel='stylesheet' href='css/styles.css' type='text/css'>
+
+    <link href="https://fonts.googleapis.com/css?family=Lora:400,700|Work+Sans:300,400,600,700|Cousine:400,700" rel="stylesheet">
+
+    <!-- LIBRARIES! -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.6.5/svg.js"></script>
+
+    <script src="workspaceInteraction.js"></script>
+    <script src="classListItem.js"></script>
+    <script src="classWorkspaceItem.js"></script>
+    <script src="classWorkspace.js"></script>
+    <script src="utilities.js"></script>
+  </head>
+  <body>
+    <!-- GRID OF IMAGES -->
+
+    <div id="container">
+      <div class="list-wrapper">
+        <div id="list-view-toggle">
+          <h1 id="mapsToggle">Items</h1>
+          <h1 class="unselected" id="workspaceToggle">Workspaces</h1>
+          <div class="clearfix"></div>
+        </div>
+
+
+        <div id="list"></div>
+        <div id="workspaces">
+          <ul id="existing-workspaces">
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div id="drawing">
+      <svg xmlns="http://www.w3.org/2000/svg" id="linespace">
+        <defs>
+         <filter id="grayscale">
+          <feColorMatrix type="saturate" values="0.50"/>
+        </filter>
+
+      </svg>
+    </div>
+
+    <script src="initialize.js"></script>
+  </body>
+</html>

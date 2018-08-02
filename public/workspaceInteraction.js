@@ -1,13 +1,3 @@
-var mapsList = [];
-var workspace;
-
-
-var bgColors = ["#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6", "#A30059",
-"#0000A6", "#63FFAC", "#004D43", "#8FB0FF","#5A0007", "#809693", "#1B4400", "#4FC601"];
-
-var tileSize = 100;
-
-
 function saveWorkspace(e) {
   workspace.metadata.lastEdited = new Date();
   workspace.metadata.title = $("#title").val();

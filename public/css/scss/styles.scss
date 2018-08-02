@@ -82,7 +82,7 @@ button#save:hover {
 .list-wrapper {
   z-index: 2000;
   box-sizing: border-box;
-  width: 300px;
+  width: 250px;
   max-height: calc(100vh - 102px);;
   margin: 50px;
 
@@ -114,9 +114,6 @@ button#save:hover {
       }
   }
 
-  #list {
-
-  }
   /* clear fix */
   #list:after {
     content: '';
@@ -133,17 +130,34 @@ button#save:hover {
     background-size: cover;
     position: relative;
     border: 1px solid #000;
+    position: relative;
+    line-height: 0;
   }
 
   .list-item:hover {
     cursor: move;
   }
 
+  .list-item p {
+    font-family: 'Cousine', monospace;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    margin: 10px;
+    color: #aaaaaa;
+  }
+
   .list-item h1 {
     font-family: 'Cousine', monospace;
-    font-size: 14px;
+    font-size: 10px;
     margin: 10px;
-    font-weight: 700;
+    font-weight: 400;
+    position: absolute;
+    bottom: 0;
+    color: #fff;
+    background-color: #000;
+    line-height: 12px;
+    padding: 2px;
   }
 
   .list-item img {

@@ -1,3 +1,5 @@
+var workspace;
+
 class Workspace {
   constructor() {
     this.metadata = {
@@ -10,9 +12,8 @@ class Workspace {
     this.height = null;
     this.width = null;
 
-    this.maps = [];
-    this.groups = [];
-    this.links = [];
+    this.contains = [];
+    this.colorCounter = 0;
   }
 
   populate() {

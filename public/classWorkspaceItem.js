@@ -1,21 +1,32 @@
-class WorkspaceMap {
-  constructor(obj, tempX, tempY, drag) {
+class WorkspaceItem {
+  constructor(obj, tempX, tempY, tempDragging, add) {
+    this._id = obj._id;
     this.metadata = {
-      index: obj.index,
-      title: obj.title,
-      thumb: obj.thumb,
-      description: obj.description,
-      category: obj.category,
-      post: obj.post,
-      images: obj.images,
-      video: obj.video,
-      datasources: obj.datasources
+      type: obj.metadata.type,
+      title: obj.metadata.title,
+    }
+
+    this.thumbnail = {
+      type: obj.thumbnail.type,
+      content: obj.thumbnail.content
+    }
+
+    if (obj.hasOwnProperty("contains")) {
+      this.contains = obj.contains;
+    }
+
+    if (obj.hasOwnProperty("is")) {
+      this.is = obj.is;
+    }
+
+    if (obj.hasOwnProperty("in")) {
+      this.in = obj.in;
     }
 
     this.x = tempX;
     this.y = tempY;
 
-    this.dragging = drag;
+    this.dragging = tempDragging;
     this.grouped = false;
     this.hoveredOver = null;
     this.linkedRight = false;
@@ -23,64 +34,141 @@ class WorkspaceMap {
 
     this.linkIndex = null;
 
-    // add it to the DOM
-    this.element = this.createDOM();
-    this.element.appendTo("#linespace");
+    this.element = this.createDOM()
 
-    if (drag) {
-      this.dragElement();
-    } else {
+    if (add) {
+      if (this.metadata.type == "group") {
+        this.color = bgColors[workspace.colorCounter];
+        workspace.colorCounter++;
+      }
+      this.element.appendTo("#linespace");
+      this.element.attr({
+        "transform": "translate(350,350)",
+        //"transform": "translate(" + this.x + "," + this.y + ")",
+      });
+      this.element.attr("class", "active");
     }
 
+    // if (tempDragging) {
+    //   this.dragElement();
+    // }
+
     // make sure it's clickable
-    this.element.on('mousedown', this.dragElement.bind(this));
-    this.element.on('click', this.showInfo.bind(this));
-    this.element.on('mouseenter', this.showNodes.bind(this));
-    this.element.on('mouseleave', this.hideNodes.bind(this));
+    // this.element.on('mousedown', this.dragElement.bind(this));
+    // this.element.on('click', this.showInfo.bind(this));
+    // this.element.on('mouseenter', this.showNodes.bind(this));
+    // this.element.on('mouseleave', this.hideNodes.bind(this));
   }
 
   createDOM() {
+    var el;
 
-    var el = $(SVG('g'))
-      .attr('mydata:mapObj', this.metadata.title)
-      .attr('class', "active")
-      .attr("transform", "translate(" + this.x + ","+this.y+")");
+      if (this.metadata.type == 'object') {
+        el = this.createSingleItem(this);
+        return el;
+      }
 
-    var img = $(SVGimage("img/" + this.metadata.thumb)).attr({
-      "width": tileSize,
-      "height": tileSize,
-      "preserveAspectRatio": "xMinYMin slice"
-    })
+      else if (this.metadata.type == "group") {
+        var groupId = this._id
+        el = $(SVG('g'));
+        el.attr("z-index", 0);
+
+        var backgroundRect = $(SVG('rect'))
+        .attr({
+          "width": tileSize + 10*(this.contains.length+1),
+          "height": tileSize + 10*(this.contains.length+1),
+          "stroke": bgColors[workspace.colorCounter],
+          "fill": bgColors[workspace.colorCounter]
+        })
+
+        backgroundRect.appendTo(el);
+
+        var innerElements = [];
+        //var promiseArray = [];
+        // query the database for each internal object
+        for (var i = 0; i < this.contains.length; i++) {
+          var promise = getItem(this.contains[i].id)
+            .then(function(response_item) {
+              //console.log(response_item);
+              var offset;
+              var positionInGroup;
+              for (var k = 0; k < response_item.in.length; k++) {
+                if (response_item.in[k].id == groupId) {
+                  offset = (response_item.in[k].indexIn+1) * 10;
+                  positionInGroup = response_item.in[k].indexIn;
+                }
+              }
+              var innerObj = new WorkspaceItem(response_item, 0, 0, false, false);
+              innerObj.grouped = true;
+              innerObj.positionInGroup = positionInGroup;
+              innerObj.element.attr("transform", "translate("+ offset +"," + offset +")");
+              innerObj.element.attr("z-index", positionInGroup);
+              innerObj.element.appendTo(el);
+            })
+          //promiseArray.push(promise);
+        }
+        return el;
+
+        // Promise.all(promiseArray).then(function() {
+        //   console.log("all promises done");
+        //
+        // })
+
+      }
+  }
+
+  createSingleItem(item) {
+    var el = $(SVG('g'));
+
+    var thumb;
+    if (item.thumbnail.type == "image") {
+      thumb = $(SVGimage("data/" + item.thumbnail.content)).attr({
+        "width": tileSize,
+        "height": tileSize,
+        "preserveAspectRatio": "xMidYMid slice"
+      })
+    } else {
+      thumb = $(SVG('text'))
+      .attr({
+        "x": 0,
+        "y": 14,
+        "fill": "#fff",
+        "font-family": "Work Sans",
+        "font-size": "14px"
+      })
+      .text(item.thumbnail.content)
+    }
 
     var border = $(SVG('rect'))
     .attr({
       "width": tileSize,
       "height": tileSize,
       "stroke": "#000",
-      "fill": "none"
+      "fill": "#000"
     })
 
-
     var nodeRight = $(SVG('circle'))
-      .attr('mydata:mapObj', this.metadata.title)
-      .attr('class', 'grip')
-      .attr('cx',-2.5)
-      .attr('cy',tileSize/2)
-      .attr('r', 6)
-      .attr('fill', "#cccccc");
+    .attr('mydata:mapObj', this.metadata.title)
+    .attr('class', 'grip')
+    .attr('cx',-2.5)
+    .attr('cy',tileSize/2)
+    .attr('r', 6)
+    .attr('fill', "#cccccc")
+    .attr('opacity', 0);
 
     var nodeLeft = $(SVG('circle'))
-      .attr('mydata:mapObj', this.metadata.title)
-      .attr('class', 'grip')
-      .attr('cx',tileSize + 2.5)
-      .attr('cy',tileSize/2)
-      .attr('r', 6)
-      .attr('fill', "#cccccc");
+    .attr('mydata:mapObj', this.metadata.title)
+    .attr('class', 'grip')
+    .attr('cx',tileSize + 2.5)
+    .attr('cy',tileSize/2)
+    .attr('r', 6)
+    .attr('fill', "#cccccc")
+    .attr('opacity', 0);
 
     nodeRight.appendTo(el);
     nodeLeft.appendTo(el);
     border.appendTo(el);
-    img.appendTo(el);
+    thumb.appendTo(el);
 
     return el
   }
@@ -142,7 +230,7 @@ class WorkspaceMap {
         let yChange = parseInt(transform.translate[1]) - currentY;
         $(elem).attr("transform", "translate(" + xChange + "," + yChange +")");
 
-        //this.hideNodes();
+        this.hideNodes();
 
         // if we want to show them while moving - like when connected
         // $(this.leftNode).attr({
@@ -189,8 +277,12 @@ class WorkspaceMap {
         let elem = document.getElementById("dragging");
 
         let transform = parseTransform(elem);
-        let xChange = roundToGrid(parseInt(transform.translate[0]) - currentX);
+        let xChange = roundToGrid(parseInt(transform.translate[0]) - currentX - 10);
         let yChange = roundToGrid(parseInt(transform.translate[1]) - currentY);
+        if (this.metadata.type == "group") {
+          xChange -= 10;
+          yChange -= 10;
+        }
         $(elem).attr("transform", "translate(" + xChange + "," + yChange +")");
 
         this.x = xChange;
@@ -253,90 +345,17 @@ class WorkspaceMap {
     }
   }
 
-  removeFromArray() {
-    var arrayIndex;
-    for (var i = 0; i < workspace.maps.length; i++) {
-      if (workspace.maps[i].metadata.index == this.metadata.index) {
-        arrayIndex = i;
-      }
-    };
-    workspace.maps.splice(arrayIndex, 1);
-  }
-
-  addNodes() {
-    this.rightNode = this.createNode('right');
-    this.leftNode = this.createNode('left');
-    this.rightNode.appendTo("#linespace");
-    this.leftNode.appendTo("#linespace");
-
-    this.hideNodes();
-
-    this.rightNode.on('mousedown', this.addLink.bind(this));
-  }
-
-  createNode(side) {
-    var x, y;
-
-    typeof this.x === "number" ? x = this.x : x = parseInt(this.x.replace("px"));
-
-    typeof this.y === "number" ? y = this.y : y = parseInt(this.y.replace("px"));
-
-    if (side == "right") {
-      x += (tileSize+4);
-    }
-    y += (tileSize/2 + 2);
-
-    return $(SVG('circle'))
-      .attr('mydata:mapObj', this.metadata.title)
-      .attr("class", "grip")
-      .attr('cx',x)
-      .attr('cy',y)
-      .attr('r', 6)
-      .attr('fill', "#cccccc");
-  }
-
-  hideNodes() {
-    if (!this.grouped || (this.expanded && this.grouped)) {
-      if (!this.linkedRight && !this.linkedLeft) {
-
-        let xBelow = window.event.clientX || 0;
-        let yBelow = window.event.clientY || 0;
-
-        let elementsBelow = document.elementsFromPoint(xBelow, yBelow);
-        let circleBelow = elementsBelow.filter(function(item) {
-          return (item.className.baseVal == "grip" ? true : false);
-        });
-
-        if (circleBelow.length == 0) {
-          $(this.leftNode).attr("opacity",0);
-          $(this.rightNode).attr("opacity",0);
-        }
-      }
-    }
-  }
 
   showNodes() {
     if (!this.grouped || (this.expanded && this.grouped)) {
-      $(this.leftNode).attr("opacity",1);
-      $(this.rightNode).attr("opacity",1);
+      this.element.children(".grip").attr("opacity",1);
     }
   }
 
-  moveNodeBy(nodeTemp, moveX, moveY) {
-    let prevX = nodeTemp.attr("cx");
-    let newX = parseInt(prevX) + parseInt(moveX);
-    let prevY = nodeTemp.attr("cy");
-    let newY = parseInt(prevY) + parseInt(moveY);
-    nodeTemp.attr("cx", newX);
-    nodeTemp.attr("cy", newY);
+  hideNodes() {
+    this.element.children(".grip").attr("opacity",0);
   }
 
-  moveNodeTo(nodeTemp, newX, newY) {
-    nodeTemp.attr({
-      "cx": newX,
-      "cy": newY
-    });
-  }
 
   addLink() {
     console.log("node triggered");
@@ -347,18 +366,18 @@ class WorkspaceMap {
     this.rightNode.attr("fill","#aa11ee");
 
     var linkElem = $(SVG('line'))
-      .attr("id", "newLink")
-      .attr("class", "link")
-      .attr({
-        'x1': startX,
-        'y1': startY,
-        'x2': startX,
-        'y2': startY
-      })
-      .css({
-        "stroke": "#aa11ee",
-        "stroke-width": "2px"
-      });
+    .attr("id", "newLink")
+    .attr("class", "link")
+    .attr({
+      'x1': startX,
+      'y1': startY,
+      'x2': startX,
+      'y2': startY
+    })
+    .css({
+      "stroke": "#aa11ee",
+      "stroke-width": "2px"
+    });
 
     var newLink = new Link(this, "#aa11ee", linkElem);
     newLink.element.appendTo("#linespace");
