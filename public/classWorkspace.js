@@ -14,6 +14,8 @@ class Workspace {
 
     this.contains = [];
     this.colorCounter = 0;
+
+    this.activeObj = null;
   }
 
   populate() {

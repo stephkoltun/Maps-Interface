@@ -50,7 +50,7 @@ class ListItem {
 
       if (this.metadata.type == "group") {
         img.css({
-          "filter": "grayscale(100%) opacity(0.2)",
+          "filter": "grayscale(100%) opacity(0.5)",
         });
       }
 
@@ -63,7 +63,7 @@ class ListItem {
     }
 
     if (this.metadata.type == "group") {
-      el.css("box-shadow", "3px 3px #000");
+      el.css("box-shadow", "6px 6px #000");
     }
 
 

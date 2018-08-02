@@ -2,6 +2,22 @@ var tileSize = 100;
 var bgColors = ["#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6", "#A30059",
 "#0000A6", "#63FFAC", "#004D43", "#8FB0FF","#5A0007", "#809693", "#1B4400", "#4FC601"];
 
+var keyPressed = false;
+var whichKey = null;
+var isMouseDragging = false;
+var isMouseDown = false;
+var startingPos = [];
+var objFromIndex = false;
+
+$(document).keydown(function(e) {
+  keyPressed = true;
+  whichKey = e.which;
+})
+
+$(document).keyup(function(e) {
+  keyPressed = false;
+  whichKey = null;
+})
 
 
 function roundToGrid(num) {
@@ -49,15 +65,21 @@ function getItem(id) {
   })
 }
 
-$(document).on("click", "svg#linespace", function(e) {
+$(document).on('click', "svg#linespace", function(e) {
+  var tar = $(e.target)[0];
+  var match = $("svg#linespace")[0];
 
-  if ($("#info-panel").length >0) {
-    $("#info-panel").remove();
-  }
+  if (tar == match) {
+    if ($("#info").length >0) {
+      $("#info").remove();
+    }
 
-  if ($(".activeInfo").length > 0) {
-    let prevLeft = $(".activeInfo").offset().left;
-    $(".activeInfo").offset({left: prevLeft+2 });
-    $(".activeInfo").removeClass("activeInfo");
-  }
+    //workspace.activeInfo.element.children('.background').attr("opacity", 0);
+    workspace.activeObj.element.toggleClass("active inactive");
+    workspace.activeObj.element.children('.background').css("opacity","0");
+    workspace.activeObj = null;
+
+
+  };
+
 })

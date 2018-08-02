@@ -218,49 +218,60 @@ button#save:hover {
   box-sizing: border-box;
 }
 
-.active {
-  background-color: none;
-  background-size: cover;
-  position: absolute;
-  width: 100px;
-  height: 100px;
-  border: 2px solid #000;
-  box-shadow: 12px 12px #000;
+// .active {
+//   background-color: none;
+//   background-size: cover;
+//   position: absolute;
+//   width: 100px;
+//   height: 100px;
+//   border: 2px solid #000;
+//   box-shadow: 12px 12px #000;
+//
+//   h1 {
+//     font-family: 'Cousine', monospace;
+//     font-size: 14px;
+//     margin: 10px;
+//     position: absolute;
+//     bottom: 0;
+//     left: 0;
+//     font-weight: 700;
+//     color: #000;
+//   }
+// }
 
-  h1 {
-    font-family: 'Cousine', monospace;
-    font-size: 14px;
-    margin: 10px;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    font-weight: 700;
-    color: #000;
-  }
+.inactive > .background {
+  opacity: 0;
+  fill: #fff;
+  stroke: #000;
 }
 
-.inactive > rect {
-  stroke-width: 5;
+.active > .background {
+  opacity: 1;
+  fill: #fff;
+  stroke: #000;
 }
 
-.active > rect {
-  stroke-width: 8;
+.activeInfo > .background {
+  fill: #fff;
+  stroke: #000;
 }
 
-.activeInfo {
-  border: 4px solid #000;
+.collapsed > .background {
+  opacity: 1;
+  fill: #fff;
+  stroke: #000;
 }
 
 
 
 /* ------ INFO PANEL ------ */
 
-#info-panel {
+#info {
   position: absolute;
   right: 50px;
   bottom: 50px;
   z-index: 100;
-  width: 350px;
+  width: 250px;
   font-family: 'Work Sans', sans-serif;
 
   h1 {
@@ -276,77 +287,49 @@ button#save:hover {
     margin: 0;
     padding: 15px;
   }
-}
 
-.metadata, .post, .images {
-  border: 2px solid #000;
-  box-sizing: border-box;
-  overflow: scroll;
-  max-height: calc((100vh - 200px)/5);
-}
+  .metadata, .post, .images {
+    border: 2px solid #000;
+    box-sizing: border-box;
+    overflow: scroll;
+    max-height: calc((100vh - 200px)/5);
+  }
 
-.metadata {
-  width: 100%;
-  display: flex;
-  flex-direction: row
+  .metadata {
+    width: 100%;
+    display: flex;
+    flex-direction: row
 
-}
+  }
 
-.cat {
-  font-family: 'Cousine';
-  font-weight: 400;
-  font-size: 12px;
-  width: 50%;
-  border-right: 2px solid #000;
-}
+  .cat {
+    font-family: 'Cousine';
+    font-weight: 400;
+    font-size: 12px;
+    width: 50%;
+    border-right: 2px solid #000;
+  }
 
-.desc {
-  font-family: 'Cousine';
-  font-weight: 400;
-  font-size: 12px;
-  width: 50%;
-}
+  .desc {
+    font-family: 'Cousine';
+    font-weight: 400;
+    font-size: 12px;
+    width: 50%;
+  }
 
-.post {
-  overflow: scroll;
-  max-height: 200px;
-  width: 100%;
-}
-
-.images {
-  width: 100%;
-  overflow: scroll;
-  max-height: 200px;
-  padding: 15px;
-}
-
-#image-inset:after {
-  content: '';
-  display: block;
-  clear: both;
-}
-
-.image-sizer, .image-item {
-  width: 100px;
-  height: 80px;
-  padding: 10px;
-  box-sizing: border-box;
-}
-
-.image-item {
-  float: left;
-
-  img {
-    object-fit: cover;
-    scale: 2;
-    display: block;
-    height: 100%;
+  .post {
+    overflow: scroll;
+    max-height: 200px;
     width: 100%;
   }
+
+  .images {
+    width: 100%;
+    overflow: scroll;
+    max-height: 200px;
+    padding: 15px;
+  }
 }
-
-
-
 
 
 

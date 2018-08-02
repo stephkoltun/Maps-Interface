@@ -4,6 +4,7 @@ class WorkspaceItem {
     this.metadata = {
       type: obj.metadata.type,
       title: obj.metadata.title,
+      description: obj.metadata.description
     }
 
     this.thumbnail = {
@@ -27,8 +28,14 @@ class WorkspaceItem {
     this.y = tempY;
 
     this.dragging = tempDragging;
+
+    if (obj.metadata.type == "group") {
+      this.groupDisplay = "stacked"// collapsed, stacked, expanded
+    }
+
+
     this.grouped = false;
-    this.hoveredOver = null;
+    //this.hoveredOver = null;
     this.linkedRight = false;
     this.linkedLeft = false;
 
@@ -37,84 +44,174 @@ class WorkspaceItem {
     this.element = this.createDOM()
 
     if (add) {
-      if (this.metadata.type == "group") {
-        this.color = bgColors[workspace.colorCounter];
-        workspace.colorCounter++;
-      }
       this.element.appendTo("#linespace");
       this.element.attr({
-        "transform": "translate(350,350)",
-        //"transform": "translate(" + this.x + "," + this.y + ")",
+        //"transform": "translate(350,350)",
+        "transform": "translate(" + this.x + "," + this.y + ")",
       });
       this.element.attr("class", "active");
     }
 
-    // if (tempDragging) {
-    //   this.dragElement();
-    // }
+    if (tempDragging) {
+      objFromIndex = true;
+      this.dragElement();
+    }
 
-    // make sure it's clickable
-    // this.element.on('mousedown', this.dragElement.bind(this));
-    // this.element.on('click', this.showInfo.bind(this));
-    // this.element.on('mouseenter', this.showNodes.bind(this));
-    // this.element.on('mouseleave', this.hideNodes.bind(this));
+    //make sure it's clickable
+    //this.element.on('mousedown', this.dragElement.bind(this));
+    this.element.on('mousedown', function(e) {
+      isMouseDragging = false;
+      isMouseDown = true;
+      startingPos = [e.pageX, e.pageY];
+    }.bind(this))
+
+    this.element.on('mousemove', function(e) {
+      if (!(e.pageX == startingPos[0] && e.pageY == startingPos[1]) && isMouseDown) {
+        isMouseDragging = true;
+        if (!this.dragging) {
+          this.dragElement();
+        }
+      }
+    }.bind(this))
+
+    this.element.on('mouseup', function(e) {
+      isMouseDragging = false;
+      isMouseDown = false;
+      startingPos = [];
+
+      if (isMouseDragging) {
+        console.log("Finished dragging");
+      } else {
+        console.log("Clicked");
+
+        if (keyPressed && whichKey==16 && this.metadata.type=="group") {
+          console.log("lets do a group thing");
+
+          if (this.groupDisplay == "stacked") {
+            this.collapseGroup();
+          } else if (this.groupDisplay == "collapsed") {
+            this.stackGroup();
+          }
+
+        } else {
+
+
+          if (!this.grouped) {
+            if (objFromIndex) {
+              objFromIndex = false;
+            } else {
+              this.element.toggleClass("active inactive");
+              this.element.children('.background').css("opacity","1");
+              this.showInfo();
+              workspace.activeObj = this;
+            }
+          }
+        }
+      }
+
+    }.bind(this))
+
+    this.element.on('mouseenter', function() {
+      if (!this.grouped && this.groupDisplay != "collapsed") {
+        this.showNodes();
+        if (this.element.hasClass("inactive")) {
+          this.element.children('.background').css("opacity","1")
+        }
+      } else if (this.groupDisplay == "collapsed") {
+        this.showNodes();
+      }
+    }.bind(this));
+
+    this.element.on('mouseleave', function() {
+      if (!this.grouped && this.groupDisplay != "collapsed") {
+        this.hideNodes();
+        if (this.element.hasClass("inactive")) {
+          this.element.children('.background').css("opacity","0")
+        }
+      } else if (this.groupDisplay == "collapsed") {
+        this.hideNodes();
+      }
+    }.bind(this))
   }
 
   createDOM() {
     var el;
 
-      if (this.metadata.type == 'object') {
-        el = this.createSingleItem(this);
-        return el;
-      }
+    if (this.metadata.type == 'object') {
+      el = this.createSingleItem(this);
+      return el;
+    }
 
-      else if (this.metadata.type == "group") {
-        var groupId = this._id
-        el = $(SVG('g'));
-        el.attr("z-index", 0);
+    else if (this.metadata.type == "group") {
+      var groupId = this._id
+      el = $(SVG('g'));
 
-        var backgroundRect = $(SVG('rect'))
-        .attr({
-          "width": tileSize + 10*(this.contains.length+1),
-          "height": tileSize + 10*(this.contains.length+1),
-          "stroke": bgColors[workspace.colorCounter],
-          "fill": bgColors[workspace.colorCounter]
+      var backgroundRect = $(SVG('rect'))
+      .attr({
+        "class": "background",
+        "x": -6,
+        "y": -6,
+        "width": tileSize + 10*(this.contains.length)+12,
+        "height": tileSize + 10*(this.contains.length)+12,
+      })
+
+      var nodeRight = $(SVG('circle'))
+      .attr('mydata:mapObj', this.metadata.title)
+      .attr('class', 'grip')
+      .attr('cx',-2.5)
+      .attr('cy',tileSize/2)
+      .attr('r', 6)
+      .attr('fill', "#cccccc")
+      .attr('opacity', 0);
+
+      var nodeLeft = $(SVG('circle'))
+      .attr('mydata:mapObj', this.metadata.title)
+      .attr('class', 'grip')
+      .attr('cx',tileSize + 2.5)
+      .attr('cy',tileSize/2)
+      .attr('r', 6)
+      .attr('fill', "#cccccc")
+      .attr('opacity', 0);
+
+      backgroundRect.appendTo(el);
+      nodeRight.appendTo(el);
+      nodeLeft.appendTo(el);
+
+      var innerElements = [];
+      //var promiseArray = [];
+      // query the database for each internal object
+      for (var i = 0; i < this.contains.length; i++) {
+        var promise = getItem(this.contains[i].id)
+        .then(function(response_item) {
+          //console.log(response_item);
+          var offset;
+          var positionInGroup;
+          for (var k = 0; k < response_item.in.length; k++) {
+            if (response_item.in[k].id == groupId) {
+              offset = (response_item.in[k].indexIn) * 10;
+              positionInGroup = response_item.in[k].indexIn;
+            }
+          }
+          var innerObj = new WorkspaceItem(response_item, 0, 0, false, false);
+          innerObj.grouped = true;
+          innerObj.positionInGroup = positionInGroup;
+
+          innerObj.element.attr({
+            "transform": "translate("+ offset +"," + offset +")",
+            "class": "inactive",
+            "data-position": positionInGroup
+          });
+          innerObj.element.appendTo(el);
         })
-
-        backgroundRect.appendTo(el);
-
-        var innerElements = [];
-        //var promiseArray = [];
-        // query the database for each internal object
-        for (var i = 0; i < this.contains.length; i++) {
-          var promise = getItem(this.contains[i].id)
-            .then(function(response_item) {
-              //console.log(response_item);
-              var offset;
-              var positionInGroup;
-              for (var k = 0; k < response_item.in.length; k++) {
-                if (response_item.in[k].id == groupId) {
-                  offset = (response_item.in[k].indexIn+1) * 10;
-                  positionInGroup = response_item.in[k].indexIn;
-                }
-              }
-              var innerObj = new WorkspaceItem(response_item, 0, 0, false, false);
-              innerObj.grouped = true;
-              innerObj.positionInGroup = positionInGroup;
-              innerObj.element.attr("transform", "translate("+ offset +"," + offset +")");
-              innerObj.element.attr("z-index", positionInGroup);
-              innerObj.element.appendTo(el);
-            })
-          //promiseArray.push(promise);
-        }
-        return el;
-
-        // Promise.all(promiseArray).then(function() {
-        //   console.log("all promises done");
-        //
-        // })
-
+        //promiseArray.push(promise);
       }
+      return el;
+
+      // Promise.all(promiseArray).then(function() {
+      //   console.log("all promises done");
+      //
+      // })
+    }
   }
 
   createSingleItem(item) {
@@ -139,35 +236,40 @@ class WorkspaceItem {
       .text(item.thumbnail.content)
     }
 
-    var border = $(SVG('rect'))
+    var background = $(SVG('rect'))
     .attr({
-      "width": tileSize,
-      "height": tileSize,
-      "stroke": "#000",
-      "fill": "#000"
+      "class": "background",
+      "x": -6,
+      "y": -6,
+      "width": tileSize+12,
+      "height": tileSize+12,
     })
 
     var nodeRight = $(SVG('circle'))
     .attr('mydata:mapObj', this.metadata.title)
     .attr('class', 'grip')
-    .attr('cx',-2.5)
+    .attr('cx',-7)
     .attr('cy',tileSize/2)
-    .attr('r', 6)
-    .attr('fill', "#cccccc")
+    .attr('r', 5)
+    // .attr("stroke", "#000")
+    // .attr("stroke-width", 1)
+    .attr('fill', "#ccc")
     .attr('opacity', 0);
 
     var nodeLeft = $(SVG('circle'))
     .attr('mydata:mapObj', this.metadata.title)
     .attr('class', 'grip')
-    .attr('cx',tileSize + 2.5)
+    .attr('cx',tileSize + 7)
     .attr('cy',tileSize/2)
-    .attr('r', 6)
-    .attr('fill', "#cccccc")
+    .attr('r', 5)
+    // .attr("stroke", "#000")
+    // .attr("stroke-width", 1)
+    .attr('fill', "#ccc")
     .attr('opacity', 0);
 
     nodeRight.appendTo(el);
     nodeLeft.appendTo(el);
-    border.appendTo(el);
+    background.appendTo(el);
     thumb.appendTo(el);
 
     return el
@@ -202,6 +304,7 @@ class WorkspaceItem {
   }
 
   dragElement() {
+    console.log("dragging");
     if (!this.grouped) {
       this.element.attr("id","dragging");
       this.element.addClass("active");
@@ -268,6 +371,7 @@ class WorkspaceItem {
 
       function stopDraggingElement(e) {
         e = e || window.event;
+        this.dragging = false;
 
         // stop moving when mouse button is released
         document.onmouseup = null;
@@ -279,10 +383,7 @@ class WorkspaceItem {
         let transform = parseTransform(elem);
         let xChange = roundToGrid(parseInt(transform.translate[0]) - currentX - 10);
         let yChange = roundToGrid(parseInt(transform.translate[1]) - currentY);
-        if (this.metadata.type == "group") {
-          xChange -= 10;
-          yChange -= 10;
-        }
+
         $(elem).attr("transform", "translate(" + xChange + "," + yChange +")");
 
         this.x = xChange;
@@ -338,11 +439,63 @@ class WorkspaceItem {
         //   this.removeFromArray();
         // }
 
-        setTimeout(function() {
-          this.dragging = false;
-        },100);
+
       }
     }
+  }
+
+  stackGroup() {
+    this.groupDisplay = "stacked";
+    this.element.addClass("stacked");
+    this.element.removeClass("collapsed");
+
+    var internals = this.element.find('g');
+
+    for (var i = 0; i < internals.length; i++) {
+      var offset = i * 10;
+      $(internals[i]).attr({
+        "transform": "translate("+offset+","+offset+")"
+      })
+    }
+
+    this.element.children('.background')
+    .attr({
+      "x": -6,
+      "y": -6,
+      "width": tileSize + 10*(this.contains.length)+12,
+      "height": tileSize + 10*(this.contains.length)+12,
+    })
+    this.element.children('.drop').remove();
+  }
+
+  collapseGroup() {
+    this.groupDisplay = "collapsed";
+    this.element.addClass("collapsed");
+    this.element.removeClass("stacked");
+    var internals = this.element.find('g');
+
+    for (var i = 0; i < internals.length; i++) {
+      $(internals[i]).attr({
+        "transform": "translate(0,0)"
+      })
+    }
+    var background = this.element.children('.background')
+    $(background).attr({
+      "x": -6,
+      "y": -6,
+      "width": tileSize+12,
+      "height": tileSize+12,
+    })
+
+    var drop = $(SVG('rect'))
+    .attr({
+      "class": "drop",
+      "x": 0,
+      "y": 0,
+      "width": tileSize+12,
+      "height": tileSize+12,
+    })
+    this.element.prepend(drop);
   }
 
 
@@ -442,24 +595,17 @@ class WorkspaceItem {
   }
 
   showInfo() {
-    if ($("#info-panel").length >0) {
-      $("#info-panel").remove();
+
+    if ($("#info").length >0) {
+      $("#info").remove();
     }
 
-    if ($(".activeInfo").length > 0) {
-      let prevLeft = $(".activeInfo").offset().left;
-      $(".activeInfo").offset({left: prevLeft+2 });
-      $(".activeInfo").removeClass("activeInfo");
-    }
-
-    this.element.addClass("activeInfo");
-    let curPosition = this.element.offset().left;
-    this.element.offset({left: curPosition-2 });
+    var div = document.createElement('div');
+    div.id = "info";
 
     var appendString = "";
 
-
-    var meta = "<div class='metadata'><p class='cat'>" + this.metadata.category + "</p><p class='desc'>" + this.metadata.description + "</p></div>";
+    var meta = "<div class='metadata'><p class='desc'>" + this.metadata.description + "</p></div>";
 
     if (this.metadata.title != null) {
       var title = "<h1>" + this.metadata.title + "</h1>";
@@ -481,23 +627,9 @@ class WorkspaceItem {
       appendString += images;
     }
 
+    div.innerHTML = appendString;
+    var target = document.querySelector('#container');
+    target.parentNode.insertBefore( div, target );
 
-    $('<div/>', {
-      "id": 'info-panel',
-    }).append(appendString).appendTo('.workspace-wrapper');
-
-    $('#image-inset').imagesLoaded( function() {
-      console.log("images loaded");
-      $('#image-inset').isotope({
-        // options...
-        itemSelector: '.image-item',
-        percentPosition: true,
-        cellsByRow: {
-          columnWidth:'.image-sizer',
-          rowHeight: '.image-sizer'
-        }
-      });
-
-    });
   }
 }
